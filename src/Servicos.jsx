@@ -63,8 +63,8 @@ export default function Servicos() {
 
   useEffect(() => {
     (async () => {
-      try { const r = await window.storage.get("fluxo:jobs"); if (r?.value) { const p = JSON.parse(r.value); setJobs(p.jobs); setTheme(p.theme || "dark"); } else setJobs(demo()); }
-      catch { setJobs(demo()); }
+      try { const r = await window.storage.get("fluxo:jobs"); if (r?.value) { const p = JSON.parse(r.value); setJobs(p.jobs); setTheme(p.theme || "dark"); } else setJobs([]); }
+      catch { setJobs([]); }
       setLoaded(true);
     })();
   }, []);

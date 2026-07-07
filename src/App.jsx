@@ -265,7 +265,7 @@ export default function App() {
           if (old?.value) st = { ...EMPTY, tx: migrateV1(JSON.parse(old.value)) };
         } catch {}
       }
-      setS(st || demoData());
+      setS(st || EMPTY());
       setLoaded(true);
     })();
   }, []);
