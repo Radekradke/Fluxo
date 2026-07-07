@@ -1,0 +1,23 @@
+FLUXO — COMO USAR
+
+1) Instalar dependências:
+   npm install
+
+2) Rodar em modo desenvolvimento:
+   npm run dev
+
+3) Gerar build para hospedagem:
+   npm run build
+
+4) Subir para hospedagem:
+   envie o conteúdo da pasta dist/.
+
+PWA:
+- Para instalar como app, publique em HTTPS.
+- No Android/Chrome, use o botão Instalar ou o menu do navegador.
+- No iPhone/Safari, use Compartilhar > Adicionar à Tela de Início.
+
+DADOS:
+- Dados gerais: localStorage chave fluxo:v2
+- Serviços: localStorage chave fluxo:jobs
+- Faça backup pela aba Contas > Backup dos dados.

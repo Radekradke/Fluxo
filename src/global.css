@@ -1,0 +1,11 @@
+html, body, #root {
+  margin: 0;
+  min-height: 100%;
+}
+body {
+  background: #0E0F13;
+  overscroll-behavior-y: none;
+}
+button, input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+}
