@@ -256,24 +256,31 @@ export default function App() {
 
   /* ---- load + migração ---- */
   useEffect(() => {
-    (async () => {
-      let st = null;
-      try { const r = await window.storage.get("fluxo:v2"); if (r?.value) st = JSON.parse(r.value); } catch {}
-      if (!st) {
-        try {
-          const old = await window.storage.get("fluxo:tx");
-          if (old?.value) st = { ...EMPTY, tx: migrateV1(JSON.parse(old.value)) };
-        } catch {}
-      }
-      setS(st || EMPTY());
-      setLoaded(true);
-    })();
-  }, []);
+  try {
+    const raw = localStorage.getItem("fluxo:v2");
 
-  useEffect(() => {
-    if (!loaded) return;
-    (async () => { try { await window.storage.set("fluxo:v2", JSON.stringify(S)); } catch {} })();
-  }, [S, loaded]);
+    if (raw) {
+      setS(JSON.parse(raw));
+    } else {
+      setS(EMPTY);
+    }
+  } catch (error) {
+    console.error("Erro ao carregar dados:", error);
+    setS(EMPTY);
+  } finally {
+    setLoaded(true);
+  }
+}, []);
+
+ useEffect(() => {
+  if (!loaded) return;
+
+  try {
+    localStorage.setItem("fluxo:v2", JSON.stringify(S));
+  } catch (error) {
+    console.error("Erro ao salvar dados:", error);
+  }
+}, [S, loaded]);
 
   /* ---- derivados ---- */
   const allCats = useMemo(() => ({

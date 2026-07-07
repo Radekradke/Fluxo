@@ -61,15 +61,33 @@ export default function Servicos() {
   const [open, setOpen] = useState({}); // job.id -> expandido
   const [filter, setFilter] = useState("todos");
 
-  useEffect(() => {
-    (async () => {
-      try { const r = await window.storage.get("fluxo:jobs"); if (r?.value) { const p = JSON.parse(r.value); setJobs(p.jobs); setTheme(p.theme || "dark"); } else setJobs([]); }
-      catch { setJobs([]); }
-      setLoaded(true);
-    })();
-  }, []);
-  useEffect(() => { if (loaded) { (async () => { try { await window.storage.set("fluxo:jobs", JSON.stringify({ jobs, theme })); } catch {} })(); } }, [jobs, theme, loaded]);
+useEffect(() => {
+  try {
+    const raw = localStorage.getItem("fluxo:jobs");
 
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      setJobs(parsed.jobs || []);
+      setTheme(parsed.theme || "dark");
+    } else {
+      setJobs([]);
+    }
+  } catch (error) {
+    console.error("Erro ao carregar serviços:", error);
+    setJobs([]);
+  } finally {
+    setLoaded(true);
+  }
+}, []);
+  useEffect(() => {
+  if (!loaded) return;
+
+  try {
+    localStorage.setItem("fluxo:jobs", JSON.stringify({ jobs, theme }));
+  } catch (error) {
+    console.error("Erro ao salvar serviços:", error);
+  }
+}, [jobs, theme, loaded]);
   /* métricas globais */
   const flat = jobs.filter((j) => j.status !== "cancelado").flatMap((j) => j.payments);
   const contabilizado = flat.filter((p) => p.counted).reduce((s, p) => s + p.amount, 0);
