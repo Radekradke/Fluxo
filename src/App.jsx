@@ -48,6 +48,56 @@ const DEFAULT_CATS = {
 };
 const PAYMENTS = ["Pix", "Dinheiro", "Débito", "Crédito", "Boleto", "Transferência"];
 
+const ANDRE_PLAN_TX = [
+  { title: "Saldo atual em conta", amount: 800, type: "receita", category: "Outros", date: "2026-07-08", status: "efetivado", payment: "Transferência", notes: "plano do André" },
+  { title: "Salário dia 20", amount: 1063, type: "receita", category: "Salário", date: "2026-07-20", status: "pendente", payment: "Transferência", notes: "plano do André" },
+  { title: "Ajuda esposa", amount: 1700, type: "receita", category: "Outros", date: "2026-07-20", status: "pendente", payment: "Pix", notes: "plano do André" },
+  { title: "Auxílio emergencial", amount: 300, type: "receita", category: "Outros", date: "2026-07-20", status: "pendente", payment: "Pix", notes: "plano do André" },
+  { title: "Projeto/Freela 50% inicial", amount: 2000, type: "receita", category: "Freelance", date: "2026-07-20", status: "pendente", payment: "Transferência", notes: "plano do André" },
+  { title: "Projeto/Freela restante", amount: 2000, type: "receita", category: "Freelance", date: "2026-08-20", status: "pendente", payment: "Transferência", notes: "plano do André" },
+  { title: "Tatuagem líquida", amount: 270, type: "receita", category: "Tattoo", date: "2026-07-20", status: "pendente", payment: "Pix", notes: "plano do André" },
+];
+
+const ANDRE_PLAN_DEBTS = [
+  { name: "Mercado Pago — quitação empréstimos", creditor: "Mercado Pago", total: 2083.60, paid: 0, installments: 1, paidInst: 0, dueDay: 20, priority: 1, reason: "Maior desconto, quitar vários empréstimos.", original: 2893.89, centralKind: "quitacao" },
+  { name: "Nubank — crédito vencido", creditor: "Nubank", total: 1793.91, paid: 0, installments: 1, paidInst: 0, dueDay: 6, priority: 2, reason: "Juros altos de cartão/crédito.", centralKind: "quitacao" },
+  { name: "ShopeePay — fatura atrasada", creditor: "ShopeePay", total: 657.02, paid: 0, installments: 1, paidInst: 0, dueDay: 28, priority: 3, reason: "Fatura atrasada desde 28/05/2026.", originalDue: "2026-05-28", centralKind: "quitacao" },
+  { name: "Itaú — saldo negativo", creditor: "Itaú", total: 400, paid: 0, installments: 1, paidInst: 0, dueDay: 20, priority: 4, reason: "Zerar saldo negativo.", centralKind: "quitacao" },
+  { name: "Inter — fatura atrasada", creditor: "Inter", total: 1244.51, paid: 0, installments: 1, paidInst: 0, dueDay: 7, priority: 5, reason: "Sugerir para agosto se precisar manter caixa.", centralKind: "quitacao" },
+  { name: "C6 Bank — consignado", creditor: "C6 Bank", total: 440, paid: 0, installments: 1, paidInst: 0, dueDay: 20, priority: 6, priorityLabel: "manter em dia", reason: "Valor mensal; manter em dia, não antecipar.", centralKind: "mensal" },
+  { name: "Aluguel", creditor: "Aluguel", total: 300, paid: 0, installments: 1, paidInst: 0, dueDay: 10, priority: 7, priorityLabel: "mensal", reason: "Compromisso mensal essencial.", centralKind: "mensal" },
+];
+
+const ANDRE_PLAN_CARDS = [
+  { name: "Nubank", limit: 3600.02, used: 1793.91, closeDay: 30, dueDay: 6, notes: "plano do André" },
+  { name: "Inter", limit: 1244.51, used: 1244.51, closeDay: 30, dueDay: 7, notes: "limite não informado no plano do André" },
+  { name: "ShopeePay", limit: 657.02, used: 657.02, closeDay: 28, dueDay: 28, notes: "fatura atrasada vencida em 28/05/2026" },
+];
+
+const ANDRE_PLAN_RECURRING = [
+  { title: "C6 Bank — consignado", amount: 440, type: "despesa", category: "Dívidas", day: 20 },
+  { title: "Aluguel", amount: 300, type: "despesa", category: "Studio/Aluguel", day: 10 },
+];
+
+const normText = (v) => String(v || "").trim().toLowerCase();
+const cents = (v) => Math.round((Number(v) || 0) * 100);
+const sameNameAmount = (item, name, amount, field = "name") => normText(item[field]) === normText(name) && cents(item.amount ?? item.total ?? item.used) === cents(amount);
+
+const normalizeStore = (data) => ({
+  ...EMPTY,
+  ...(data || {}),
+  tx: Array.isArray(data?.tx) ? data.tx : [],
+  customCats: {
+    despesa: Array.isArray(data?.customCats?.despesa) ? data.customCats.despesa : [],
+    receita: Array.isArray(data?.customCats?.receita) ? data.customCats.receita : [],
+  },
+  budgets: data?.budgets || {},
+  goals: Array.isArray(data?.goals) ? data.goals : [],
+  debts: Array.isArray(data?.debts) ? data.debts : [],
+  cards: Array.isArray(data?.cards) ? data.cards : [],
+  recurring: Array.isArray(data?.recurring) ? data.recurring : [],
+});
+
 /* ═══════════════════════════ STORE — persistência + migração v1 ═══════════════════════════ */
 const EMPTY = { theme: "dark", tx: [], customCats: { despesa: [], receita: [] }, budgets: {}, goals: [], debts: [], cards: [], recurring: [] };
 
@@ -260,13 +310,13 @@ export default function App() {
     const raw = localStorage.getItem("fluxo:v2");
 
     if (raw) {
-      setS(JSON.parse(raw));
+      setS(normalizeStore(JSON.parse(raw)));
     } else {
-      setS(EMPTY);
+      setS(normalizeStore(EMPTY));
     }
   } catch (error) {
     console.error("Erro ao carregar dados:", error);
-    setS(EMPTY);
+    setS(normalizeStore(EMPTY));
   } finally {
     setLoaded(true);
   }
@@ -322,6 +372,55 @@ export default function App() {
   const launchRecurring = (r) => {
     const day = String(Math.min(r.day, 28)).padStart(2, "0");
     upd({ tx: [...S.tx, { id: uid(), title: r.title, amount: r.amount, type: r.type, category: r.category, date: `${cursor}-${day}`, status: "pendente", payment: "Boleto", notes: "recorrente" }] });
+  };
+
+  const importAndrePlan = () => {
+    let addedTx = 0;
+    let addedDebts = 0;
+    let addedCards = 0;
+    let addedRecurring = 0;
+
+    const base = normalizeStore(S);
+    const nextTx = [...base.tx];
+    const nextDebts = [...base.debts];
+    const nextCards = [...base.cards];
+    const nextRecurring = [...base.recurring];
+
+    ANDRE_PLAN_TX.forEach((tx) => {
+      if (!nextTx.some((item) => sameNameAmount(item, tx.title, tx.amount, "title"))) {
+        nextTx.push({ ...tx, id: uid() + Math.random() });
+        addedTx += 1;
+      }
+    });
+
+    ANDRE_PLAN_DEBTS.forEach((debt) => {
+      if (!nextDebts.some((item) => sameNameAmount(item, debt.name, debt.total))) {
+        nextDebts.push({ ...debt, id: uid() + Math.random() });
+        addedDebts += 1;
+      }
+    });
+
+    ANDRE_PLAN_CARDS.forEach((card) => {
+      if (!nextCards.some((item) => sameNameAmount(item, card.name, card.used))) {
+        nextCards.push({ ...card, id: uid() + Math.random() });
+        addedCards += 1;
+      }
+    });
+
+    ANDRE_PLAN_RECURRING.forEach((item) => {
+      if (!nextRecurring.some((row) => sameNameAmount(row, item.title, item.amount, "title"))) {
+        nextRecurring.push({ ...item, id: uid() + Math.random() });
+        addedRecurring += 1;
+      }
+    });
+
+    setS({ ...base, tx: nextTx, debts: nextDebts, cards: nextCards, recurring: nextRecurring });
+
+    alert(
+      addedTx + addedDebts + addedCards + addedRecurring > 0
+        ? `Plano importado: ${addedTx} receitas, ${addedDebts} dívidas, ${addedCards} cartões e ${addedRecurring} recorrentes adicionados.`
+        : "Plano do André já estava importado. Nenhuma duplicata foi criada."
+    );
   };
 
   const exportBackup = () => {
@@ -406,6 +505,7 @@ export default function App() {
         {tab === "inicio" && <Dashboard {...{ S, cursor, mIn, mOut, balance, runway, budgetUsedPct, insights, health, catMeta, monthTx, goTab: setTab }} />}
         {tab === "extrato" && <Extrato {...{ monthTx, allCats, catMeta, onEdit: (t) => setTxModal(t), onDel: delTx, onToggle: toggleStatus, onNew: () => setTxModal({}) }} />}
         {tab === "planejar" && <Planejar {...{ S, upd, monthTx, allCats, catMeta, setSubModal }} />}
+        {tab === "central" && <CentralFinanceira {...{ S, upd, cursor, onImportAndrePlan: importAndrePlan }} />}
         {tab === "contas" && <>
           <Contas {...{ S, upd, setSubModal, launchRecurring, catMeta, cursor }} />
           <BackupCard onExport={exportBackup} onImport={importBackup} />
@@ -419,6 +519,7 @@ export default function App() {
         <button className={tab === "extrato" ? "on" : ""} onClick={() => setTab("extrato")}><List size={19} /><span>Extrato</span></button>
         <button className="fx-fab" onClick={() => setTxModal({})}><Plus size={22} /></button>
         <button className={tab === "planejar" ? "on" : ""} onClick={() => setTab("planejar")}><Target size={19} /><span>Planejar</span></button>
+        <button className={tab === "central" ? "on" : ""} onClick={() => setTab("central")}><Landmark size={19} /><span>Central</span></button>
         <button className={tab === "contas" ? "on" : ""} onClick={() => setTab("contas")}><Wallet size={19} /><span>Contas</span></button>
         <button className={tab === "servicos" ? "on" : ""} onClick={() => setTab("servicos")}><Briefcase size={19} /><span>Serviços</span></button>
       </nav>
@@ -587,6 +688,193 @@ function Dashboard({ S, cursor, mIn, mOut, balance, runway, budgetUsedPct, insig
           </div>
         ))}
         {S.goals.length === 0 && <Empty text="Nenhuma meta ainda." />}
+      </section>
+    </>
+  );
+}
+
+/* ═══════════════════════════ SCREEN: CENTRAL FINANCEIRA ═══════════════════════════ */
+function CentralFinanceira({ S, upd, cursor, onImportAndrePlan }) {
+  const [incoming, setIncoming] = useState("6133");
+  const [reserve, setReserve] = useState("300");
+
+  const pendingValue = (debt) => Math.max(0, (debt.total || 0) - (debt.paid || 0));
+  const pendingDebts = S.debts.filter((debt) => pendingValue(debt) > 0);
+  const attackDebts = pendingDebts
+    .filter((debt) => debt.centralKind !== "mensal")
+    .sort((a, b) => (Number(a.priority) || 99) - (Number(b.priority) || 99));
+
+  const monthIncome = S.tx
+    .filter((tx) => tx.type === "receita" && mKey(tx.date) === cursor)
+    .reduce((sum, tx) => sum + tx.amount, 0);
+  const payoffTotal = attackDebts.reduce((sum, debt) => sum + pendingValue(debt), 0);
+  const projectedBalance = monthIncome - payoffTotal;
+  const activeCreditors = new Set(pendingDebts.map((debt) => debt.creditor || debt.name)).size;
+
+  const cashNow = parseNum(incoming);
+  const minReserve = parseNum(reserve) || 0;
+  const sim = attackDebts.reduce((acc, debt) => {
+    const amount = pendingValue(debt);
+    if (acc.available - amount >= minReserve) {
+      acc.pay.push(debt);
+      acc.available -= amount;
+    } else {
+      acc.hold.push(debt);
+    }
+    return acc;
+  }, { available: cashNow, pay: [], hold: [] });
+
+  const markDebtPaid = (debt) => {
+    upd({
+      debts: S.debts.map((item) => item.id === debt.id
+        ? { ...item, paid: item.total, paidInst: item.installments || item.paidInst || 1 }
+        : item
+      ),
+    });
+  };
+
+  const statusFor = (name) => {
+    const debt = S.debts.find((item) => normText(item.name).includes(normText(name)));
+    if (!debt) return "não importado";
+    return pendingValue(debt) <= 0 ? "pago" : "pendente";
+  };
+
+  const julyPlan = [
+    ["Mercado Pago", 2083.60],
+    ["Nubank", 1793.91],
+    ["ShopeePay", 657.02],
+    ["Itaú", 400],
+  ];
+  const augustPlan = [
+    ["Inter", 1244.51],
+    ["C6 Bank", 440],
+    ["Aluguel", 300],
+    ["Começar reserva de emergência", 0],
+  ];
+
+  return (
+    <>
+      <section className="fx-hero fx-war-hero">
+        <div className="fx-hero-row">
+          <div>
+            <div className="fx-hero-label">Central Financeira</div>
+            <div className="fx-war-title">Plano de quitação</div>
+            <div className="fx-war-sub">Priorizar descontos, segurar caixa mínimo e empurrar o Inter para agosto se precisar.</div>
+          </div>
+        </div>
+        <button className="fx-add fx-import-plan" onClick={onImportAndrePlan}>Importar plano do André</button>
+      </section>
+
+      <section className="fx-card">
+        <div className="fx-card-title">Resumo da guerra</div>
+        <div className="fx-war-grid">
+          <div className="fx-war-tile"><span>Entradas previstas</span><b className="pos">{BRL(monthIncome)}</b></div>
+          <div className="fx-war-tile"><span>Dívidas pendentes</span><b>{pendingDebts.length}</b></div>
+          <div className="fx-war-tile"><span>Total para quitar</span><b className="neg">{BRL(payoffTotal)}</b></div>
+          <div className="fx-war-tile"><span>Saldo projetado</span><b className={projectedBalance < 0 ? "neg" : "pos"}>{BRL(projectedBalance)}</b></div>
+          <div className="fx-war-tile wide"><span>Credores ativos</span><b>{activeCreditors}</b></div>
+        </div>
+      </section>
+
+      <section className="fx-card">
+        <div className="fx-card-title">Ordem de ataque</div>
+        {attackDebts.length === 0 ? <Empty text="Nenhuma dívida de quitação pendente." /> : (
+          <div className="fx-attack-list">
+            {attackDebts.map((debt) => {
+              const remaining = pendingValue(debt);
+              return (
+                <article className="fx-attack-item" key={debt.id}>
+                  <div className="fx-attack-head">
+                    <span className="fx-priority">#{debt.priority || "?"}</span>
+                    <div>
+                      <b>{debt.name}</b>
+                      <p>{debt.reason || "Prioridade cadastrada."}</p>
+                    </div>
+                  </div>
+                  <div className="fx-attack-meta">
+                    <span className="fx-mono neg">{BRL(remaining)}</span>
+                    {debt.original && <span>original {BRL(debt.original)}</span>}
+                    {debt.originalDue && <span>venc. original {fmtDia(debt.originalDue)}/{debt.originalDue.slice(2, 4)}</span>}
+                  </div>
+                  <button className="fx-mini-btn" onClick={() => markDebtPaid(debt)}><Check size={12} /> marcar como pago</button>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <section className="fx-card">
+        <div className="fx-card-title">Simulador</div>
+        <div className="fx-row">
+          <input className="fx-amount" inputMode="decimal" value={incoming} onChange={(e) => setIncoming(e.target.value)} placeholder="Entrou quanto agora?" />
+          <input inputMode="decimal" value={reserve} onChange={(e) => setReserve(e.target.value)} placeholder="Reserva mínima" />
+        </div>
+        <div className="fx-sim-summary">
+          <span>Reserva mínima: <b className="fx-mono">{BRL(minReserve)}</b></span>
+          <span>Sobra após sugestão: <b className="fx-mono">{BRL(sim.available)}</b></span>
+        </div>
+        {sim.pay.length === 0 ? <Empty text="Informe um valor maior para liberar pagamentos sem furar a reserva." /> : (
+          <ul className="fx-mini-list">
+            {sim.pay.map((debt) => (
+              <li key={debt.id}>
+                <span className="ico"><CheckCircle2 size={16} color="var(--lime)" /></span>
+                <span className="nm">{debt.name}</span>
+                <b className="fx-mono">{BRL(pendingValue(debt))}</b>
+              </li>
+            ))}
+          </ul>
+        )}
+        {sim.hold.length > 0 && (
+          <div className="fx-hold-note">
+            Fica para depois: {sim.hold.map((debt) => debt.creditor || debt.name).join(", ")}.
+          </div>
+        )}
+      </section>
+
+      <section className="fx-card">
+        <div className="fx-card-title">Plano Julho/Agosto</div>
+        <div className="fx-plan-month">
+          <div className="fx-between fx-sm">
+            <b>Julho</b>
+            <span className="fx-mono pos">Entradas {BRL(6133)}</span>
+          </div>
+          {julyPlan.map(([name, amount]) => (
+            <div className="fx-plan-row" key={name}>
+              <span>{name}</span>
+              <b className="fx-mono">{BRL(amount)}</b>
+              <em className={statusFor(name) === "pago" ? "ok" : ""}>{statusFor(name)}</em>
+            </div>
+          ))}
+          <p>Inter pode ficar para agosto para manter caixa mínimo.</p>
+        </div>
+        <div className="fx-plan-month">
+          <div className="fx-between fx-sm"><b>Agosto</b><span className="fx-muted-sm">virada para estabilidade</span></div>
+          {augustPlan.map(([name, amount]) => (
+            <div className="fx-plan-row" key={name}>
+              <span>{name}</span>
+              <b className="fx-mono">{amount ? BRL(amount) : "reserva"}</b>
+              <em className={statusFor(name) === "pago" ? "ok" : ""}>{amount ? statusFor(name) : "iniciar"}</em>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="fx-card">
+        <div className="fx-card-title">Cartões no radar</div>
+        {S.cards.length === 0 ? <Empty text="Importe o plano ou cadastre cartões em Contas." /> : (
+          <div className="fx-card-stack">
+            {S.cards.map((card) => (
+              <div className="fx-card-row" key={card.id}>
+                <div>
+                  <b>{card.name}</b>
+                  <span>fecha dia {card.closeDay} · vence dia {card.dueDay}</span>
+                </div>
+                <strong className="fx-mono neg">{BRL(card.used)}</strong>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </>
   );
@@ -1094,10 +1382,46 @@ const CSS = `
 .fx-file-btn{position:relative;overflow:hidden}
 .fx-file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 
+.fx-war-hero{padding-bottom:14px}
+.fx-war-title{font-size:24px;font-weight:750;letter-spacing:0;margin-bottom:5px}
+.fx-war-sub{font-size:12.5px;color:var(--muted);line-height:1.45;max-width:360px}
+.fx-import-plan{margin-top:13px;margin-bottom:0}
+.fx-war-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fx-war-tile{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.fx-war-tile.wide{grid-column:1 / -1}
+.fx-war-tile span{font-size:11px;color:var(--muted)}
+.fx-war-tile b{font-family:ui-monospace,monospace;font-size:15px;font-variant-numeric:tabular-nums}
+.fx-attack-list{display:flex;flex-direction:column;gap:10px}
+.fx-attack-item{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px}
+.fx-attack-head{display:flex;gap:10px;align-items:flex-start}
+.fx-priority{width:30px;height:30px;border-radius:9px;background:rgba(200,246,93,.14);border:1px solid rgba(200,246,93,.25);color:#7CB93A;display:grid;place-items:center;font-size:12px;font-weight:800;flex:0 0 auto}
+.fx-root2[data-theme="dark"] .fx-priority{color:var(--lime)}
+.fx-attack-head b{font-size:14px;display:block;line-height:1.25}
+.fx-attack-head p{margin:4px 0 0;color:var(--muted);font-size:12px;line-height:1.4}
+.fx-attack-meta{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:10px 0;font-size:11px;color:var(--muted)}
+.fx-attack-meta .fx-mono{font-size:13px}
+.fx-sim-summary{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 10px;color:var(--muted);font-size:12px}
+.fx-hold-note{margin-top:10px;background:rgba(245,196,81,.1);border:1px solid rgba(245,196,81,.22);color:#F5C451;border-radius:10px;padding:9px 10px;font-size:12.5px;line-height:1.4}
+.fx-plan-month{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px;margin-bottom:10px}
+.fx-plan-month:last-child{margin-bottom:0}
+.fx-plan-month p{margin:9px 0 0;color:var(--muted);font-size:12px;line-height:1.4}
+.fx-plan-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.fx-plan-row:last-child{border-bottom:none;padding-bottom:0}
+.fx-plan-row span{min-width:0}
+.fx-plan-row em{font-style:normal;font-size:10.5px;color:#F5C451;border:1px solid rgba(245,196,81,.25);background:rgba(245,196,81,.09);border-radius:99px;padding:3px 7px;white-space:nowrap}
+.fx-plan-row em.ok{color:#7CB93A;border-color:rgba(124,185,58,.3);background:rgba(124,185,58,.1)}
+.fx-root2[data-theme="dark"] .fx-plan-row em.ok{color:var(--lime)}
+.fx-card-stack{display:flex;flex-direction:column;gap:8px}
+.fx-card-row{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 11px}
+.fx-card-row b{display:block;font-size:13.5px}
+.fx-card-row span{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.fx-card-row strong{font-size:13px;white-space:nowrap}
+
 .fx-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;
-  background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr auto 1fr 1fr 1fr;
+  background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr auto 1fr 1fr 1fr 1fr;
   align-items:center;padding:7px 10px calc(7px + env(safe-area-inset-bottom));gap:4px;z-index:50}
-.fx-nav button{background:none;border:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9.5px;cursor:pointer;padding:4px 2px}
+.fx-nav button{background:none;border:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9px;cursor:pointer;padding:4px 1px;min-width:0}
+.fx-nav span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .fx-nav button.on{color:#7CB93A}
 .fx-root2[data-theme="dark"] .fx-nav button.on{color:var(--lime)}
 .fx-fab{width:48px;height:48px;border-radius:50%;background:var(--lime)!important;color:#0E0F13!important;display:grid!important;place-items:center;margin-top:-22px;box-shadow:0 4px 14px rgba(200,246,93,.35)}
