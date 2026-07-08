@@ -34,6 +34,9 @@ const DEFAULT_CATS = {
     { name: "Compras", icon: "🛍️", color: "#38BDF8" },
     { name: "Cartão de crédito", icon: "💳", color: "#FF7A5C" },
     { name: "Dívidas", icon: "🧾", color: "#F87171" },
+    { name: "Empréstimos", icon: "🏦", color: "#A78BFA" },
+    { name: "Fatura cartão", icon: "💳", color: "#FB7185" },
+    { name: "Juros/Multas", icon: "🔥", color: "#FB923C" },
     { name: "Material", icon: "🎨", color: "#C084FC" },
     { name: "Studio/Aluguel", icon: "🏢", color: "#94A3B8" },
     { name: "Impostos", icon: "🏛️", color: "#FDA4AF" },
@@ -47,6 +50,19 @@ const DEFAULT_CATS = {
   ],
 };
 const PAYMENTS = ["Pix", "Dinheiro", "Débito", "Crédito", "Boleto", "Transferência"];
+const DEBT_TYPES = {
+  cartao: { label: "Cartão de crédito", category: "Fatura cartão", priorityHint: "juros altos" },
+  emprestimo: { label: "Empréstimo", category: "Empréstimos", priorityHint: "contrato/juros" },
+  consignado: { label: "Consignado", category: "Empréstimos", priorityHint: "manter em dia" },
+  conta: { label: "Conta fixa", category: "Dívidas", priorityHint: "vencimento" },
+  juros: { label: "Juros/Multa", category: "Juros/Multas", priorityHint: "prioridade alta" },
+  outro: { label: "Outro", category: "Dívidas", priorityHint: "avaliar" },
+};
+const CARD_TYPES = {
+  credito: "Crédito",
+  debito: "Débito",
+  multiplo: "Crédito e débito",
+};
 
 const ANDRE_PLAN_TX = [
   { title: "Saldo atual em conta", amount: 800, type: "receita", category: "Outros", date: "2026-07-08", status: "efetivado", payment: "Transferência", notes: "plano do André" },
@@ -59,19 +75,19 @@ const ANDRE_PLAN_TX = [
 ];
 
 const ANDRE_PLAN_DEBTS = [
-  { name: "Mercado Pago — quitação empréstimos", creditor: "Mercado Pago", total: 2083.60, paid: 0, installments: 1, paidInst: 0, dueDay: 20, priority: 1, reason: "Maior desconto, quitar vários empréstimos.", original: 2893.89, centralKind: "quitacao" },
-  { name: "Nubank — crédito vencido", creditor: "Nubank", total: 1793.91, paid: 0, installments: 1, paidInst: 0, dueDay: 6, priority: 2, reason: "Juros altos de cartão/crédito.", centralKind: "quitacao" },
-  { name: "ShopeePay — fatura atrasada", creditor: "ShopeePay", total: 657.02, paid: 0, installments: 1, paidInst: 0, dueDay: 28, priority: 3, reason: "Fatura atrasada desde 28/05/2026.", originalDue: "2026-05-28", centralKind: "quitacao" },
-  { name: "Itaú — saldo negativo", creditor: "Itaú", total: 400, paid: 0, installments: 1, paidInst: 0, dueDay: 20, priority: 4, reason: "Zerar saldo negativo.", centralKind: "quitacao" },
-  { name: "Inter — fatura atrasada", creditor: "Inter", total: 1244.51, paid: 0, installments: 1, paidInst: 0, dueDay: 7, priority: 5, reason: "Sugerir para agosto se precisar manter caixa.", centralKind: "quitacao" },
-  { name: "C6 Bank — consignado", creditor: "C6 Bank", total: 440, paid: 0, installments: 1, paidInst: 0, dueDay: 20, priority: 6, priorityLabel: "manter em dia", reason: "Valor mensal; manter em dia, não antecipar.", centralKind: "mensal" },
-  { name: "Aluguel", creditor: "Aluguel", total: 300, paid: 0, installments: 1, paidInst: 0, dueDay: 10, priority: 7, priorityLabel: "mensal", reason: "Compromisso mensal essencial.", centralKind: "mensal" },
+  { name: "Mercado Pago — quitação empréstimos", creditor: "Mercado Pago", total: 2083.60, paid: 0, installments: 1, paidInst: 0, dueDay: 20, dueDate: "2026-07-20", priority: 1, reason: "Maior desconto, quitar vários empréstimos.", original: 2893.89, centralKind: "quitacao", debtType: "emprestimo", interestLevel: "alto" },
+  { name: "Nubank — crédito vencido", creditor: "Nubank", total: 1793.91, paid: 0, installments: 1, paidInst: 0, dueDay: 6, dueDate: "2026-08-06", priority: 2, reason: "Juros altos de cartão/crédito.", centralKind: "quitacao", debtType: "cartao", interestLevel: "alto" },
+  { name: "ShopeePay — fatura atrasada", creditor: "ShopeePay", total: 657.02, paid: 0, installments: 1, paidInst: 0, dueDay: 28, dueDate: "2026-05-28", priority: 3, reason: "Fatura atrasada desde 28/05/2026.", originalDue: "2026-05-28", centralKind: "quitacao", debtType: "cartao", interestLevel: "alto" },
+  { name: "Itaú — saldo negativo", creditor: "Itaú", total: 400, paid: 0, installments: 1, paidInst: 0, dueDay: 20, dueDate: "2026-07-20", priority: 4, reason: "Zerar saldo negativo.", centralKind: "quitacao", debtType: "conta", interestLevel: "medio" },
+  { name: "Inter — fatura atrasada", creditor: "Inter", total: 1244.51, paid: 0, installments: 1, paidInst: 0, dueDay: 7, dueDate: "2026-08-07", priority: 5, reason: "Sugerir para agosto se precisar manter caixa.", centralKind: "quitacao", debtType: "cartao", interestLevel: "alto" },
+  { name: "C6 Bank — consignado", creditor: "C6 Bank", total: 440, paid: 0, installments: 1, paidInst: 0, dueDay: 20, dueDate: "2026-08-20", priority: 6, priorityLabel: "manter em dia", reason: "Valor mensal; manter em dia, não antecipar.", centralKind: "mensal", debtType: "consignado", interestLevel: "baixo" },
+  { name: "Aluguel", creditor: "Aluguel", total: 300, paid: 0, installments: 1, paidInst: 0, dueDay: 10, dueDate: "2026-08-10", priority: 7, priorityLabel: "mensal", reason: "Compromisso mensal essencial.", centralKind: "mensal", debtType: "conta", interestLevel: "baixo" },
 ];
 
 const ANDRE_PLAN_CARDS = [
-  { name: "Nubank", limit: 3600.02, used: 1793.91, closeDay: 30, dueDay: 6, notes: "plano do André" },
-  { name: "Inter", limit: 1244.51, used: 1244.51, closeDay: 30, dueDay: 7, notes: "limite não informado no plano do André" },
-  { name: "ShopeePay", limit: 657.02, used: 657.02, closeDay: 28, dueDay: 28, notes: "fatura atrasada vencida em 28/05/2026" },
+  { name: "Nubank", limit: 3600.02, used: 1793.91, closeDay: 30, dueDay: 6, cardType: "credito", notes: "plano do André" },
+  { name: "Inter", limit: 1244.51, used: 1244.51, closeDay: 30, dueDay: 7, cardType: "credito", notes: "limite não informado no plano do André" },
+  { name: "ShopeePay", limit: 657.02, used: 657.02, closeDay: 28, dueDay: 28, cardType: "credito", notes: "fatura atrasada vencida em 28/05/2026" },
 ];
 
 const ANDRE_PLAN_RECURRING = [
@@ -82,6 +98,53 @@ const ANDRE_PLAN_RECURRING = [
 const normText = (v) => String(v || "").trim().toLowerCase();
 const cents = (v) => Math.round((Number(v) || 0) * 100);
 const sameNameAmount = (item, name, amount, field = "name") => normText(item[field]) === normText(name) && cents(item.amount ?? item.total ?? item.used) === cents(amount);
+const pendingDebtValue = (debt) => Math.max(0, (debt.total || 0) - (debt.paid || 0));
+const cashBalance = (state) => (state.tx || [])
+  .filter((tx) => tx.status !== "pendente")
+  .reduce((sum, tx) => sum + (tx.type === "receita" ? tx.amount : -tx.amount), 0);
+const debtKind = (debt) => DEBT_TYPES[debt.debtType || "outro"] || DEBT_TYPES.outro;
+const debtPaymentCategory = (debt) => debtKind(debt).category;
+const debtDueLabel = (debt) => debt.dueDate ? `${fmtDia(debt.dueDate)}/${debt.dueDate.slice(2, 4)}` : `dia ${debt.dueDay || "?"}`;
+const daysUntilDebtDue = (debt) => {
+  const base = new Date(todayISO() + "T12:00");
+  let due;
+  if (debt.dueDate) {
+    due = new Date(debt.dueDate + "T12:00");
+  } else {
+    const day = Math.min(28, Math.max(1, Number(debt.dueDay) || 28));
+    due = new Date(base.getFullYear(), base.getMonth(), day, 12);
+    if (due < base) due = new Date(base.getFullYear(), base.getMonth() + 1, day, 12);
+  }
+  return Math.ceil((due - base) / 864e5);
+};
+const interestWeight = (level) => ({ alto: 20, medio: 10, baixo: 0 }[level] ?? 5);
+const debtUrgencyScore = (debt) => (daysUntilDebtDue(debt) * 10) - interestWeight(debt.interestLevel) + (Number(debt.priority) || 50);
+const urgencyLabel = (debt) => {
+  const days = daysUntilDebtDue(debt);
+  if (days < 0) return `${Math.abs(days)} dia${Math.abs(days) === 1 ? "" : "s"} atrasado`;
+  if (days === 0) return "vence hoje";
+  if (days <= 7) return `vence em ${days} dia${days === 1 ? "" : "s"}`;
+  return `vence em ${days} dias`;
+};
+const isCardDebt = (card, debt) => {
+  const cardName = normText(card.name);
+  return debt.debtType === "cartao" && (normText(debt.creditor).includes(cardName) || normText(debt.name).includes(cardName));
+};
+const inferDebtType = (debt) => {
+  if (debt.debtType) return debt.debtType;
+  const text = normText(`${debt.name} ${debt.creditor}`);
+  if (text.includes("nubank") || text.includes("inter") || text.includes("shopee") || text.includes("cartão") || text.includes("fatura") || text.includes("crédito")) return "cartao";
+  if (text.includes("consignado")) return "consignado";
+  if (text.includes("mercado pago") || text.includes("empréstimo")) return "emprestimo";
+  if (text.includes("juros") || text.includes("multa")) return "juros";
+  if (text.includes("aluguel") || text.includes("saldo negativo")) return "conta";
+  return "outro";
+};
+const inferInterestLevel = (debt) => {
+  if (debt.interestLevel) return debt.interestLevel;
+  return ["cartao", "emprestimo", "juros"].includes(inferDebtType(debt)) ? "alto" : "medio";
+};
+const inferCardType = (card) => card.cardType || "credito";
 
 const normalizeStore = (data) => ({
   ...EMPTY,
@@ -93,9 +156,15 @@ const normalizeStore = (data) => ({
   },
   budgets: data?.budgets || {},
   goals: Array.isArray(data?.goals) ? data.goals : [],
-  debts: Array.isArray(data?.debts) ? data.debts : [],
-  cards: Array.isArray(data?.cards) ? data.cards : [],
-  recurring: Array.isArray(data?.recurring) ? data.recurring : [],
+  debts: Array.isArray(data?.debts) ? data.debts.map((debt) => ({ ...debt, debtType: inferDebtType(debt), interestLevel: inferInterestLevel(debt) })) : [],
+  cards: Array.isArray(data?.cards) ? data.cards.map((card) => ({ ...card, cardType: inferCardType(card) })) : [],
+  recurring: Array.isArray(data?.recurring) ? data.recurring.map((item) => ({
+    ...item,
+    recurrenceMode: item.recurrenceMode || "permanente",
+    totalAmount: item.totalAmount || 0,
+    installments: item.installments || 0,
+    paidCount: item.paidCount || 0,
+  })) : [],
 });
 
 /* ═══════════════════════════ STORE — persistência + migração v1 ═══════════════════════════ */
@@ -213,6 +282,96 @@ function healthScore(S, cursor) {
   return { score, label: label[0], color: label[1] };
 }
 
+function applyDebtPaymentsToState(state, debtPayments) {
+  const base = normalizeStore(state);
+  const nextTx = [...base.tx];
+  let nextDebts = [...base.debts];
+  let nextCards = [...base.cards];
+
+  debtPayments.forEach(({ debt, amount }) => {
+    const ix = nextDebts.findIndex((item) => item.id === debt.id);
+    const current = ix >= 0 ? nextDebts[ix] : debt;
+    const value = Math.min(parseNum(amount), pendingDebtValue(current));
+    if (value <= 0) return;
+
+    nextTx.push({
+      id: uid() + Math.random(),
+      title: `${value < pendingDebtValue(current) ? "Pagamento parcial" : "Pagamento"} ${current.creditor || current.name}`,
+      amount: value,
+      type: "despesa",
+      category: debtPaymentCategory(current),
+      date: todayISO(),
+      status: "efetivado",
+      payment: "Pix",
+      notes: `central:pagamento-divida:${current.id}`,
+    });
+
+    if (ix >= 0) {
+      nextDebts[ix] = {
+        ...current,
+        paid: Math.min(current.total, (current.paid || 0) + value),
+        paidInst: value >= pendingDebtValue(current) ? (current.installments || current.paidInst || 1) : current.paidInst,
+      };
+    }
+
+    nextCards = nextCards.map((card) => isCardDebt(card, current)
+      ? { ...card, used: Math.max(0, (card.used || 0) - value) }
+      : card
+    );
+  });
+
+  return { ...base, tx: nextTx, debts: nextDebts, cards: nextCards };
+}
+
+function applyCardPaymentToState(state, card, amount) {
+  const base = normalizeStore(state);
+  const cardIx = base.cards.findIndex((item) => item.id === card.id);
+  const currentCard = cardIx >= 0 ? base.cards[cardIx] : card;
+  const value = Math.min(parseNum(amount), currentCard.used || 0);
+  if (value <= 0) return base;
+
+  const nextTx = [...base.tx, {
+    id: uid() + Math.random(),
+    title: `${value < (currentCard.used || 0) ? "Pagamento parcial" : "Pagamento"} cartão ${currentCard.name}`,
+    amount: value,
+    type: "despesa",
+    category: "Fatura cartão",
+    date: todayISO(),
+    status: "efetivado",
+    payment: "Pix",
+    notes: `central:pagamento-cartao:${currentCard.id}`,
+  }];
+
+  const nextCards = base.cards.map((item) => item.id === currentCard.id
+    ? { ...item, used: Math.max(0, (item.used || 0) - value) }
+    : item
+  );
+
+  let remaining = value;
+  const reductions = {};
+  base.debts
+    .filter((debt) => isCardDebt(currentCard, debt) && pendingDebtValue(debt) > 0)
+    .sort((a, b) => (Number(a.priority) || 99) - (Number(b.priority) || 99))
+    .forEach((debt) => {
+      if (remaining <= 0) return;
+      const paid = Math.min(pendingDebtValue(debt), remaining);
+      reductions[debt.id] = paid;
+      remaining -= paid;
+    });
+
+  const nextDebts = base.debts.map((debt) => {
+    const paid = reductions[debt.id] || 0;
+    if (paid <= 0) return debt;
+    return {
+      ...debt,
+      paid: Math.min(debt.total, (debt.paid || 0) + paid),
+      paidInst: paid >= pendingDebtValue(debt) ? (debt.installments || debt.paidInst || 1) : debt.paidInst,
+    };
+  });
+
+  return { ...base, tx: nextTx, cards: nextCards, debts: nextDebts };
+}
+
 /* ═══════════════════════════ UI PRIMITIVES ═══════════════════════════ */
 const Modal = ({ title, onClose, children }) => (
   <div className="fx-overlay" onClick={onClose}>
@@ -303,6 +462,7 @@ export default function App() {
   const [cursor, setCursor] = useState(nowKey());
   const [txModal, setTxModal] = useState(null); // null | {} novo | tx existente
   const [subModal, setSubModal] = useState(null); // {kind, item}
+  const [notice, setNotice] = useState(null);
 
   /* ---- load + migração ---- */
   useEffect(() => {
@@ -342,7 +502,7 @@ export default function App() {
   const monthTx = useMemo(() => S.tx.filter((t) => mKey(t.date) === cursor), [S.tx, cursor]);
   const mIn = monthTx.filter((t) => t.type === "receita").reduce((s, t) => s + t.amount, 0);
   const mOut = monthTx.filter((t) => t.type === "despesa").reduce((s, t) => s + t.amount, 0);
-  const balance = useMemo(() => S.tx.filter((t) => t.status !== "pendente").reduce((s, t) => s + (t.type === "receita" ? t.amount : -t.amount), 0), [S.tx]);
+  const balance = useMemo(() => cashBalance(S), [S]);
 
   const budgetTotal = Object.values(S.budgets).reduce((s, v) => s + (v || 0), 0);
   const budgetUsedPct = budgetTotal > 0 ? (mOut / budgetTotal) * 100 : null;
@@ -360,6 +520,10 @@ export default function App() {
   const health = useMemo(() => healthScore(S, cursor), [S, cursor]);
 
   const upd = (patch) => setS((p) => ({ ...p, ...patch }));
+  const notify = (text, tone = "warn") => {
+    setNotice({ text, tone });
+    window.setTimeout(() => setNotice(null), 3600);
+  };
 
   /* ---- ações tx ---- */
   const saveTx = (tx) => {
@@ -367,11 +531,69 @@ export default function App() {
     setTxModal(null);
   };
   const delTx = (id) => upd({ tx: S.tx.filter((t) => t.id !== id) });
-  const toggleStatus = (id) => upd({ tx: S.tx.map((t) => (t.id === id ? { ...t, status: t.status === "pendente" ? "efetivado" : "pendente" } : t)) });
+  const toggleStatus = (id) => setS((prev) => {
+    const base = normalizeStore(prev);
+    let recurring = base.recurring;
+    const tx = base.tx.map((t) => {
+      if (t.id !== id) return t;
+      const nextStatus = t.status === "pendente" ? "efetivado" : "pendente";
+      let recurringCounted = !!t.recurringCounted;
+
+      if (t.recurringId) {
+        const rec = recurring.find((item) => item.id === t.recurringId);
+        if (rec?.recurrenceMode === "parcelado" && nextStatus === "efetivado" && !recurringCounted) {
+          recurring = recurring.map((item) => item.id === rec.id ? { ...item, paidCount: Math.min(item.installments || 0, (item.paidCount || 0) + 1) } : item);
+          recurringCounted = true;
+        } else if (rec?.recurrenceMode === "parcelado" && nextStatus === "pendente" && recurringCounted) {
+          recurring = recurring.map((item) => item.id === rec.id ? { ...item, paidCount: Math.max(0, (item.paidCount || 0) - 1) } : item);
+          recurringCounted = false;
+        }
+      }
+
+      return { ...t, status: nextStatus, recurringCounted };
+    });
+    return { ...base, tx, recurring };
+  });
 
   const launchRecurring = (r) => {
+    if (r.recurrenceMode === "parcelado" && (r.paidCount || 0) >= (r.installments || 0)) {
+      notify("Esse recorrente parcelado já foi concluído.", "ok");
+      return;
+    }
     const day = String(Math.min(r.day, 28)).padStart(2, "0");
-    upd({ tx: [...S.tx, { id: uid(), title: r.title, amount: r.amount, type: r.type, category: r.category, date: `${cursor}-${day}`, status: "pendente", payment: "Boleto", notes: "recorrente" }] });
+    upd({
+      tx: [...S.tx, { id: uid(), title: r.title, amount: r.amount, type: r.type, category: r.category, date: `${cursor}-${day}`, status: "pendente", payment: "Boleto", notes: `recorrente:${r.id}`, recurringId: r.id, recurringCounted: false }],
+    });
+  };
+
+  const payDebt = (debt, amount = pendingDebtValue(debt)) => {
+    const value = Math.min(parseNum(amount), pendingDebtValue(debt));
+    if (value <= 0) return;
+    if (value > balance) {
+      notify(`Caixa insuficiente: disponível ${BRL(balance)}, pagamento ${BRL(value)}.`);
+      return;
+    }
+    setS((prev) => applyDebtPaymentsToState(prev, [{ debt, amount }]));
+  };
+
+  const payDebts = (debts) => {
+    const total = debts.reduce((sum, debt) => sum + pendingDebtValue(debt), 0);
+    if (total <= 0) return;
+    if (total > balance) {
+      notify(`Caixa insuficiente para a sugestão: disponível ${BRL(balance)}, necessário ${BRL(total)}.`);
+      return;
+    }
+    setS((prev) => applyDebtPaymentsToState(prev, debts.map((debt) => ({ debt, amount: pendingDebtValue(debt) }))));
+  };
+
+  const payCard = (card, amount = card.used) => {
+    const value = Math.min(parseNum(amount), card.used || 0);
+    if (value <= 0) return;
+    if (value > balance) {
+      notify(`Caixa insuficiente: disponível ${BRL(balance)}, pagamento ${BRL(value)}.`);
+      return;
+    }
+    setS((prev) => applyCardPaymentToState(prev, card, amount));
   };
 
   const importAndrePlan = () => {
@@ -416,10 +638,11 @@ export default function App() {
 
     setS({ ...base, tx: nextTx, debts: nextDebts, cards: nextCards, recurring: nextRecurring });
 
-    alert(
+    notify(
       addedTx + addedDebts + addedCards + addedRecurring > 0
         ? `Plano importado: ${addedTx} receitas, ${addedDebts} dívidas, ${addedCards} cartões e ${addedRecurring} recorrentes adicionados.`
-        : "Plano do André já estava importado. Nenhuma duplicata foi criada."
+        : "Plano do André já estava importado. Nenhuma duplicata foi criada.",
+      "ok"
     );
   };
 
@@ -505,13 +728,15 @@ export default function App() {
         {tab === "inicio" && <Dashboard {...{ S, cursor, mIn, mOut, balance, runway, budgetUsedPct, insights, health, catMeta, monthTx, goTab: setTab }} />}
         {tab === "extrato" && <Extrato {...{ monthTx, allCats, catMeta, onEdit: (t) => setTxModal(t), onDel: delTx, onToggle: toggleStatus, onNew: () => setTxModal({}) }} />}
         {tab === "planejar" && <Planejar {...{ S, upd, monthTx, allCats, catMeta, setSubModal }} />}
-        {tab === "central" && <CentralFinanceira {...{ S, upd, cursor, onImportAndrePlan: importAndrePlan }} />}
+        {tab === "central" && <CentralFinanceira {...{ S, cursor, balance, onImportAndrePlan: importAndrePlan, onPayDebt: payDebt, onPayDebts: payDebts, onPayCard: payCard }} />}
         {tab === "contas" && <>
-          <Contas {...{ S, upd, setSubModal, launchRecurring, catMeta, cursor }} />
+          <Contas {...{ S, upd, setSubModal, launchRecurring, catMeta, cursor, onPayDebt: payDebt, onPayCard: payCard }} />
           <BackupCard onExport={exportBackup} onImport={importBackup} />
         </>}
         {tab === "servicos" && <Servicos />}
       </main>
+
+      {notice && <div className={`fx-toast ${notice.tone}`}>{notice.text}</div>}
 
       {/* BOTTOM NAV */}
       <nav className="fx-nav">
@@ -694,30 +919,27 @@ function Dashboard({ S, cursor, mIn, mOut, balance, runway, budgetUsedPct, insig
 }
 
 /* ═══════════════════════════ SCREEN: CENTRAL FINANCEIRA ═══════════════════════════ */
-function CentralFinanceira({ S, upd, cursor, onImportAndrePlan }) {
-  const [incoming, setIncoming] = useState("6133");
+function CentralFinanceira({ S, cursor, balance, onImportAndrePlan, onPayDebt, onPayDebts, onPayCard }) {
+  const [incoming, setIncoming] = useState("");
   const [reserve, setReserve] = useState("300");
 
-  const currentBalance = S.tx
-    .filter((tx) => tx.status !== "pendente")
-    .reduce((sum, tx) => sum + (tx.type === "receita" ? tx.amount : -tx.amount), 0);
-  const pendingValue = (debt) => Math.max(0, (debt.total || 0) - (debt.paid || 0));
-  const pendingDebts = S.debts.filter((debt) => pendingValue(debt) > 0);
+  const currentBalance = balance;
+  const pendingDebts = S.debts.filter((debt) => pendingDebtValue(debt) > 0);
   const attackDebts = pendingDebts
     .filter((debt) => debt.centralKind !== "mensal")
-    .sort((a, b) => (Number(a.priority) || 99) - (Number(b.priority) || 99));
+    .sort((a, b) => debtUrgencyScore(a) - debtUrgencyScore(b));
 
   const monthIncome = S.tx
     .filter((tx) => tx.type === "receita" && mKey(tx.date) === cursor)
     .reduce((sum, tx) => sum + tx.amount, 0);
-  const payoffTotal = attackDebts.reduce((sum, debt) => sum + pendingValue(debt), 0);
+  const payoffTotal = attackDebts.reduce((sum, debt) => sum + pendingDebtValue(debt), 0);
   const projectedBalance = currentBalance - payoffTotal;
   const activeCreditors = new Set(pendingDebts.map((debt) => debt.creditor || debt.name)).size;
 
-  const cashNow = parseNum(incoming);
+  const cashNow = parseNum(incoming) || currentBalance;
   const minReserve = parseNum(reserve) || 0;
   const sim = attackDebts.reduce((acc, debt) => {
-    const amount = pendingValue(debt);
+    const amount = pendingDebtValue(debt);
     if (acc.available - amount >= minReserve) {
       acc.pay.push(debt);
       acc.available -= amount;
@@ -727,89 +949,25 @@ function CentralFinanceira({ S, upd, cursor, onImportAndrePlan }) {
     return acc;
   }, { available: cashNow, pay: [], hold: [] });
 
-  const isCardDebt = (card, debt) => {
-    const cardName = normText(card.name);
-    return normText(debt.creditor).includes(cardName) || normText(debt.name).includes(cardName);
-  };
-
-  const payDebt = (debt, amount = pendingValue(debt)) => {
-    const value = Math.min(amount, pendingValue(debt));
-    if (value <= 0) return;
-
-    const txNote = `central:pagamento:${debt.id}:${cents(value)}`;
-    const alreadyPosted = S.tx.some((tx) => tx.notes === txNote);
-    const paymentTx = {
-      id: uid() + Math.random(),
-      title: `Pagamento ${debt.creditor || debt.name}`,
-      amount: value,
-      type: "despesa",
-      category: "Dívidas",
-      date: todayISO(),
-      status: "efetivado",
-      payment: "Pix",
-      notes: txNote,
-    };
-
-    upd({
-      tx: alreadyPosted ? S.tx : [...S.tx, paymentTx],
-      debts: S.debts.map((item) => item.id === debt.id
-        ? {
-            ...item,
-            paid: Math.min(item.total, (item.paid || 0) + value),
-            paidInst: value >= pendingValue(item) ? (item.installments || item.paidInst || 1) : item.paidInst,
-          }
-        : item
-      ),
-      cards: S.cards.map((card) => isCardDebt(card, debt)
-        ? { ...card, used: Math.max(0, (card.used || 0) - value) }
-        : card
-      ),
-    });
+  const payPartialDebt = (debt) => {
+    const value = parseNum(prompt(`Pagar quanto de ${debt.creditor || debt.name}?`, String(pendingDebtValue(debt)).replace(".", ",")));
+    if (value > 0) onPayDebt(debt, value);
   };
 
   const paySuggestion = () => {
     if (sim.pay.length === 0) return;
+    onPayDebts(sim.pay);
+  };
 
-    const payments = sim.pay.map((debt) => ({ debt, value: pendingValue(debt) })).filter((item) => item.value > 0);
-    const txNotes = new Set(S.tx.map((tx) => tx.notes));
-    const newTx = payments
-      .filter(({ debt, value }) => !txNotes.has(`central:pagamento:${debt.id}:${cents(value)}`))
-      .map(({ debt, value }) => ({
-        id: uid() + Math.random(),
-        title: `Pagamento ${debt.creditor || debt.name}`,
-        amount: value,
-        type: "despesa",
-        category: "Dívidas",
-        date: todayISO(),
-        status: "efetivado",
-        payment: "Pix",
-        notes: `central:pagamento:${debt.id}:${cents(value)}`,
-      }));
-
-    upd({
-      tx: [...S.tx, ...newTx],
-      debts: S.debts.map((debt) => {
-        const payment = payments.find((item) => item.debt.id === debt.id);
-        if (!payment) return debt;
-        return {
-          ...debt,
-          paid: Math.min(debt.total, (debt.paid || 0) + payment.value),
-          paidInst: payment.value >= pendingValue(debt) ? (debt.installments || debt.paidInst || 1) : debt.paidInst,
-        };
-      }),
-      cards: S.cards.map((card) => {
-        const paidOnCard = payments
-          .filter(({ debt }) => isCardDebt(card, debt))
-          .reduce((sum, item) => sum + item.value, 0);
-        return paidOnCard > 0 ? { ...card, used: Math.max(0, (card.used || 0) - paidOnCard) } : card;
-      }),
-    });
+  const payPartialCard = (card) => {
+    const value = parseNum(prompt(`Pagar quanto da fatura ${card.name}?`, String(card.used || 0).replace(".", ",")));
+    if (value > 0) onPayCard(card, value);
   };
 
   const statusFor = (name) => {
     const debt = S.debts.find((item) => normText(item.name).includes(normText(name)));
     if (!debt) return "não importado";
-    return pendingValue(debt) <= 0 ? "pago" : "pendente";
+    return pendingDebtValue(debt) <= 0 ? "pago" : "pendente";
   };
 
   const julyPlan = [
@@ -854,7 +1012,7 @@ function CentralFinanceira({ S, upd, cursor, onImportAndrePlan }) {
         {attackDebts.length === 0 ? <Empty text="Nenhuma dívida de quitação pendente." /> : (
           <div className="fx-attack-list">
             {attackDebts.map((debt) => {
-              const remaining = pendingValue(debt);
+              const remaining = pendingDebtValue(debt);
               return (
                 <article className="fx-attack-item" key={debt.id}>
                   <div className="fx-attack-head">
@@ -866,10 +1024,16 @@ function CentralFinanceira({ S, upd, cursor, onImportAndrePlan }) {
                   </div>
                   <div className="fx-attack-meta">
                     <span className="fx-mono neg">{BRL(remaining)}</span>
+                    <span>{debtKind(debt).label}</span>
+                    <span>juros {debt.interestLevel || "medio"}</span>
+                    <span>{urgencyLabel(debt)}</span>
                     {debt.original && <span>original {BRL(debt.original)}</span>}
                     {debt.originalDue && <span>venc. original {fmtDia(debt.originalDue)}/{debt.originalDue.slice(2, 4)}</span>}
                   </div>
-                  <button className="fx-mini-btn" onClick={() => payDebt(debt)}><Check size={12} /> pagar e baixar saldo</button>
+                  <div className="fx-pay-actions">
+                    <button className="fx-mini-btn" onClick={() => onPayDebt(debt)}><Check size={12} /> pagar total</button>
+                    <button className="fx-mini-btn" onClick={() => payPartialDebt(debt)}>pagar parte</button>
+                  </div>
                 </article>
               );
             })}
@@ -880,10 +1044,11 @@ function CentralFinanceira({ S, upd, cursor, onImportAndrePlan }) {
       <section className="fx-card">
         <div className="fx-card-title">Simulador</div>
         <div className="fx-row">
-          <input className="fx-amount" inputMode="decimal" value={incoming} onChange={(e) => setIncoming(e.target.value)} placeholder="Entrou quanto agora?" />
+          <input className="fx-amount" inputMode="decimal" value={incoming} onChange={(e) => setIncoming(e.target.value)} placeholder="Caixa p/ simular" />
           <input inputMode="decimal" value={reserve} onChange={(e) => setReserve(e.target.value)} placeholder="Reserva mínima" />
         </div>
         <div className="fx-sim-summary">
+          <span>Caixa usado: <b className="fx-mono">{BRL(cashNow)}</b></span>
           <span>Reserva mínima: <b className="fx-mono">{BRL(minReserve)}</b></span>
           <span>Sobra após sugestão: <b className="fx-mono">{BRL(sim.available)}</b></span>
         </div>
@@ -892,10 +1057,10 @@ function CentralFinanceira({ S, upd, cursor, onImportAndrePlan }) {
             <ul className="fx-mini-list">
               {sim.pay.map((debt) => (
                 <li key={debt.id}>
-                  <span className="ico"><CheckCircle2 size={16} color="var(--lime)" /></span>
-                  <span className="nm">{debt.name}</span>
-                  <b className="fx-mono">{BRL(pendingValue(debt))}</b>
-                </li>
+                <span className="ico"><CheckCircle2 size={16} color="var(--lime)" /></span>
+                <span className="nm">{debt.name}</span>
+                <b className="fx-mono">{BRL(pendingDebtValue(debt))}</b>
+              </li>
               ))}
             </ul>
             <button className="fx-add fx-pay-suggestion" onClick={paySuggestion}>Pagar sugestão e atualizar saldo</button>
@@ -944,9 +1109,12 @@ function CentralFinanceira({ S, upd, cursor, onImportAndrePlan }) {
               <div className="fx-card-row" key={card.id}>
                 <div>
                   <b>{card.name}</b>
-                  <span>fecha dia {card.closeDay} · vence dia {card.dueDay}</span>
+                  <span>{CARD_TYPES[card.cardType || "credito"]} · fecha dia {card.closeDay} · vence dia {card.dueDay}</span>
                 </div>
-                <strong className="fx-mono neg">{BRL(card.used)}</strong>
+                <div className="fx-card-pay">
+                  <strong className="fx-mono neg">{BRL(card.used)}</strong>
+                  {(card.used || 0) > 0 && <button className="fx-mini-btn" onClick={() => payPartialCard(card)}>pagar fatura</button>}
+                </div>
               </div>
             ))}
           </div>
@@ -984,7 +1152,7 @@ function Extrato({ monthTx, allCats, catMeta, onEdit, onDel, onToggle, onNew }) 
         </select>
         <select value={fCat} onChange={(e) => setFCat(e.target.value)}>
           <option value="todas">Todas categorias</option>
-          {cats.map((c) => <option key={c.name} value={c.name}>{c.icon} {c.name}</option>)}
+          {cats.map((c, i) => <option key={`${c.name}-${c.icon}-${i}`} value={c.name}>{c.icon} {c.name}</option>)}
         </select>
         <select value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
           <option value="todos">Status</option><option value="efetivado">Efetivado</option><option value="pendente">Pendente</option>
@@ -1089,9 +1257,17 @@ function Planejar({ S, upd, monthTx, allCats, catMeta, setSubModal }) {
 }
 
 /* ═══════════════════════════ SCREEN: CONTAS (dívidas + cartões + recorrentes) ═══════════════════════════ */
-function Contas({ S, upd, setSubModal, launchRecurring, catMeta, cursor }) {
+function Contas({ S, upd, setSubModal, launchRecurring, catMeta, cursor, onPayDebt, onPayCard }) {
   const recTotal = S.recurring.filter((r) => r.type === "despesa").reduce((s, r) => s + r.amount, 0);
-  const alreadyLaunched = (r) => S.tx.some((t) => mKey(t.date) === cursor && t.notes === "recorrente" && t.title === r.title);
+  const alreadyLaunched = (r) => S.tx.some((t) => mKey(t.date) === cursor && (t.recurringId === r.id || (t.notes === "recorrente" && t.title === r.title)));
+  const payDebtPart = (debt) => {
+    const value = parseNum(prompt(`Pagar quanto de ${debt.creditor || debt.name}?`, String(pendingDebtValue(debt)).replace(".", ",")));
+    if (value > 0) onPayDebt(debt, value);
+  };
+  const payCardPart = (card) => {
+    const value = parseNum(prompt(`Pagar quanto da fatura ${card.name}?`, String(card.used || 0).replace(".", ",")));
+    if (value > 0) onPayCard(card, value);
+  };
 
   return (
     <>
@@ -1104,6 +1280,7 @@ function Contas({ S, upd, setSubModal, launchRecurring, catMeta, cursor }) {
         {S.debts.length === 0 && <Empty text="Nenhuma dívida cadastrada. 🎉" />}
         {S.debts.map((d) => {
           const pct = (d.paid / d.total) * 100;
+          const remaining = pendingDebtValue(d);
           return (
             <div key={d.id} className="fx-budget">
               <div className="fx-between fx-sm">
@@ -1112,15 +1289,18 @@ function Contas({ S, upd, setSubModal, launchRecurring, catMeta, cursor }) {
               </div>
               <Bar pct={pct} color={pct >= 100 ? "var(--lime)" : "#A78BFA"} />
               <div className="fx-between fx-xs">
-                <span className="fx-muted-sm">{d.paidInst}/{d.installments} parcelas · venc. dia {d.dueDay}</span>
-                <span className="fx-muted-sm">{pct >= 100 ? "quitada ✓" : `resta ${BRL(d.total - d.paid)}`}</span>
+                <span className="fx-muted-sm">{debtKind(d).label} · juros {d.interestLevel || "medio"} · vence {debtDueLabel(d)}</span>
+                <span className="fx-muted-sm">{pct >= 100 ? "quitada ✓" : `resta ${BRL(remaining)}`}</span>
               </div>
               <div className="fx-goal-actions">
-                {d.paidInst < d.installments && (
-                  <button className="fx-mini-btn" onClick={() => {
-                    const parcela = d.total / d.installments;
-                    upd({ debts: S.debts.map((x) => x.id === d.id ? { ...x, paid: Math.min(d.total, x.paid + parcela), paidInst: x.paidInst + 1 } : x) });
-                  }}><Check size={12} /> pagar parcela ({BRL(d.total / d.installments)})</button>
+                {remaining > 0 && (
+                  <>
+                    {d.paidInst < d.installments && (
+                      <button className="fx-mini-btn" onClick={() => onPayDebt(d, d.total / d.installments)}><Check size={12} /> pagar parcela ({BRL(d.total / d.installments)})</button>
+                    )}
+                    <button className="fx-mini-btn" onClick={() => onPayDebt(d)}>pagar total</button>
+                    <button className="fx-mini-btn" onClick={() => payDebtPart(d)}>pagar parte</button>
+                  </>
                 )}
                 <button className="fx-icon-btn dim" onClick={() => setSubModal({ kind: "debt", item: d })}><Pencil size={13} /></button>
                 <button className="fx-icon-btn dim" onClick={() => upd({ debts: S.debts.filter((x) => x.id !== d.id) })}><Trash2 size={13} /></button>
@@ -1133,7 +1313,7 @@ function Contas({ S, upd, setSubModal, launchRecurring, catMeta, cursor }) {
       {/* CARTÕES */}
       <section className="fx-card">
         <div className="fx-between">
-          <div className="fx-card-title" style={{ margin: 0 }}><CreditCard size={13} style={{ verticalAlign: "-2px" }} /> Cartões de crédito</div>
+          <div className="fx-card-title" style={{ margin: 0 }}><CreditCard size={13} style={{ verticalAlign: "-2px" }} /> Cartões</div>
           <button className="fx-mini-btn" onClick={() => setSubModal({ kind: "card" })}><Plus size={13} /> cartão</button>
         </div>
         {S.cards.length === 0 && <Empty text="Cadastre seus cartões para acompanhar limite e fatura." />}
@@ -1149,9 +1329,15 @@ function Contas({ S, upd, setSubModal, launchRecurring, catMeta, cursor }) {
               <Bar pct={pct} color={pct > 80 ? "var(--coral)" : "#67C7FF"} />
               <div className="fx-between fx-xs">
                 <span className="fx-muted-sm">disponível {BRL(c.limit - c.used)}</span>
-                <span className="fx-muted-sm">fecha dia {c.closeDay} · vence dia {c.dueDay} · melhor compra dia {bestDay}</span>
+                <span className="fx-muted-sm">{CARD_TYPES[c.cardType || "credito"]} · fecha dia {c.closeDay} · vence dia {c.dueDay} · melhor compra dia {bestDay}</span>
               </div>
               <div className="fx-goal-actions">
+                {(c.used || 0) > 0 && (
+                  <>
+                    <button className="fx-mini-btn" onClick={() => onPayCard(c)}>pagar total</button>
+                    <button className="fx-mini-btn" onClick={() => payCardPart(c)}>pagar parte</button>
+                  </>
+                )}
                 <button className="fx-icon-btn dim" onClick={() => setSubModal({ kind: "card", item: c })}><Pencil size={13} /></button>
                 <button className="fx-icon-btn dim" onClick={() => upd({ cards: S.cards.filter((x) => x.id !== c.id) })}><Trash2 size={13} /></button>
               </div>
@@ -1168,17 +1354,28 @@ function Contas({ S, upd, setSubModal, launchRecurring, catMeta, cursor }) {
         </div>
         {S.recurring.length === 0 && <Empty text="Netflix, aluguel, DAS, academia…" />}
         <ul className="fx-mini-list">
-          {S.recurring.map((r) => (
-            <li key={r.id}>
-              <span className="ico">{catMeta(r.category).icon}</span>
-              <span className="nm">{r.title}<em className="fx-muted-sm"> · dia {r.day}</em></span>
-              <b className={`fx-mono ${r.type === "receita" ? "pos" : "neg"}`}>{BRL(r.amount)}</b>
-              {alreadyLaunched(r)
-                ? <span className="fx-launched"><Check size={13} /> no mês</span>
-                : <button className="fx-mini-btn" onClick={() => launchRecurring(r)}>lançar</button>}
-              <button className="fx-icon-btn dim" onClick={() => upd({ recurring: S.recurring.filter((x) => x.id !== r.id) })}><Trash2 size={13} /></button>
-            </li>
-          ))}
+          {S.recurring.map((r) => {
+            const done = r.recurrenceMode === "parcelado" && (r.paidCount || 0) >= (r.installments || 0);
+            return (
+              <li key={r.id}>
+                <span className="ico">{catMeta(r.category).icon}</span>
+                <span className="nm">
+                  {r.title}
+                  <em className="fx-muted-sm">
+                    {" "}· dia {r.day} · {r.recurrenceMode === "parcelado" ? `${r.paidCount || 0}/${r.installments || 0} parcelas` : "permanente"}
+                  </em>
+                </span>
+                <b className={`fx-mono ${r.type === "receita" ? "pos" : "neg"}`}>{BRL(r.amount)}</b>
+                {done
+                  ? <span className="fx-launched"><Check size={13} /> concluído</span>
+                  : alreadyLaunched(r)
+                    ? <span className="fx-launched"><Check size={13} /> no mês</span>
+                    : <button className="fx-mini-btn" onClick={() => launchRecurring(r)}>lançar</button>}
+                <button className="fx-icon-btn dim" onClick={() => setSubModal({ kind: "recurring", item: r })}><Pencil size={13} /></button>
+                <button className="fx-icon-btn dim" onClick={() => upd({ recurring: S.recurring.filter((x) => x.id !== r.id) })}><Trash2 size={13} /></button>
+              </li>
+            );
+          })}
         </ul>
       </section>
     </>
@@ -1240,9 +1437,9 @@ function SubForm({ modal, S, upd, allCats, onClose }) {
   const [f, setF] = useState(() => {
     if (kind === "budget") return { cat: allCats.despesa[0].name, limit: "" };
     if (kind === "goal") return { name: item?.name || "", target: item ? String(item.target) : "", current: item ? String(item.current) : "0", deadline: item?.deadline || "" };
-    if (kind === "debt") return { name: item?.name || "", total: item ? String(item.total) : "", paid: item ? String(item.paid) : "0", installments: item ? String(item.installments) : "12", paidInst: item ? String(item.paidInst) : "0", dueDay: item ? String(item.dueDay) : "10", creditor: item?.creditor || "" };
-    if (kind === "card") return { name: item?.name || "", limit: item ? String(item.limit) : "", used: item ? String(item.used) : "0", closeDay: item ? String(item.closeDay) : "28", dueDay: item ? String(item.dueDay) : "7" };
-    return { title: item?.title || "", amount: item ? String(item.amount) : "", type: item?.type || "despesa", category: item?.category || "Assinaturas", day: item ? String(item.day) : "10" };
+    if (kind === "debt") return { name: item?.name || "", total: item ? String(item.total) : "", paid: item ? String(item.paid) : "0", installments: item ? String(item.installments) : "12", paidInst: item ? String(item.paidInst) : "0", dueDay: item ? String(item.dueDay) : "10", dueDate: item?.dueDate || "", creditor: item?.creditor || "", debtType: item?.debtType || "outro", interestLevel: item?.interestLevel || "medio" };
+    if (kind === "card") return { name: item?.name || "", limit: item ? String(item.limit) : "", used: item ? String(item.used) : "0", closeDay: item ? String(item.closeDay) : "28", dueDay: item ? String(item.dueDay) : "7", cardType: item?.cardType || "credito" };
+    return { title: item?.title || "", amount: item ? String(item.amount) : "", type: item?.type || "despesa", category: item?.category || "Assinaturas", day: item ? String(item.day) : "10", recurrenceMode: item?.recurrenceMode || "permanente", totalAmount: item?.totalAmount ? String(item.totalAmount) : "", installments: item?.installments ? String(item.installments) : "", paidCount: item?.paidCount ? String(item.paidCount) : "0" };
   });
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
   const titles = { budget: "Limite por categoria", goal: item ? "Editar meta" : "Nova meta", debt: item ? "Editar dívida" : "Nova dívida", card: item ? "Editar cartão" : "Novo cartão", recurring: "Novo recorrente" };
@@ -1254,15 +1451,20 @@ function SubForm({ modal, S, upd, allCats, onClose }) {
       if (g.target > 0) upd({ goals: item ? S.goals.map((x) => x.id === g.id ? g : x) : [...S.goals, g] });
     }
     if (kind === "debt") {
-      const d = { id: item?.id || uid(), name: f.name.trim() || "Dívida", total: parseNum(f.total), paid: parseNum(f.paid), installments: Math.max(1, parseInt(f.installments) || 1), paidInst: parseInt(f.paidInst) || 0, dueDay: parseInt(f.dueDay) || 10, creditor: f.creditor.trim() };
+      const d = { id: item?.id || uid(), name: f.name.trim() || "Dívida", total: parseNum(f.total), paid: parseNum(f.paid), installments: Math.max(1, parseInt(f.installments) || 1), paidInst: parseInt(f.paidInst) || 0, dueDay: parseInt(f.dueDay) || 10, dueDate: f.dueDate, creditor: f.creditor.trim(), debtType: f.debtType, interestLevel: f.interestLevel };
       if (d.total > 0) upd({ debts: item ? S.debts.map((x) => x.id === d.id ? d : x) : [...S.debts, d] });
     }
     if (kind === "card") {
-      const c = { id: item?.id || uid(), name: f.name.trim() || "Cartão", limit: parseNum(f.limit), used: parseNum(f.used), closeDay: parseInt(f.closeDay) || 28, dueDay: parseInt(f.dueDay) || 7 };
+      const c = { id: item?.id || uid(), name: f.name.trim() || "Cartão", limit: parseNum(f.limit), used: parseNum(f.used), closeDay: parseInt(f.closeDay) || 28, dueDay: parseInt(f.dueDay) || 7, cardType: f.cardType };
       if (c.limit > 0) upd({ cards: item ? S.cards.map((x) => x.id === c.id ? c : x) : [...S.cards, c] });
     }
     if (kind === "recurring") {
-      const r = { id: item?.id || uid(), title: f.title.trim() || "Recorrente", amount: parseNum(f.amount), type: f.type, category: f.category, day: Math.min(28, Math.max(1, parseInt(f.day) || 10)) };
+      const amount = parseNum(f.amount);
+      const totalAmount = parseNum(f.totalAmount);
+      const installments = f.recurrenceMode === "parcelado"
+        ? Math.max(1, parseInt(f.installments) || (totalAmount > 0 && amount > 0 ? Math.ceil(totalAmount / amount) : 1))
+        : 0;
+      const r = { id: item?.id || uid(), title: f.title.trim() || "Recorrente", amount, type: f.type, category: f.category, day: Math.min(28, Math.max(1, parseInt(f.day) || 10)), recurrenceMode: f.recurrenceMode, totalAmount, installments, paidCount: Math.max(0, parseInt(f.paidCount) || 0) };
       if (r.amount > 0) upd({ recurring: item ? S.recurring.map((x) => x.id === r.id ? r : x) : [...S.recurring, r] });
     }
     onClose();
@@ -1292,6 +1494,16 @@ function SubForm({ modal, S, upd, allCats, onClose }) {
           <input placeholder="Credor" value={f.creditor} onChange={(e) => set("creditor", e.target.value)} />
         </div>
         <div className="fx-row">
+          <select value={f.debtType} onChange={(e) => set("debtType", e.target.value)}>
+            {Object.entries(DEBT_TYPES).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
+          </select>
+          <select value={f.interestLevel} onChange={(e) => set("interestLevel", e.target.value)}>
+            <option value="alto">Juros alto</option>
+            <option value="medio">Juros médio</option>
+            <option value="baixo">Juros baixo</option>
+          </select>
+        </div>
+        <div className="fx-row">
           <input inputMode="decimal" placeholder="Valor total R$" value={f.total} onChange={(e) => set("total", e.target.value)} />
           <input inputMode="decimal" placeholder="Já pago R$" value={f.paid} onChange={(e) => set("paid", e.target.value)} />
         </div>
@@ -1300,6 +1512,7 @@ function SubForm({ modal, S, upd, allCats, onClose }) {
           <input inputMode="numeric" placeholder="Parcelas pagas" value={f.paidInst} onChange={(e) => set("paidInst", e.target.value)} />
           <input inputMode="numeric" placeholder="Dia venc." value={f.dueDay} onChange={(e) => set("dueDay", e.target.value)} />
         </div>
+        <div className="fx-row"><input type="date" value={f.dueDate} onChange={(e) => set("dueDate", e.target.value)} /></div>
       </>)}
       {kind === "card" && (<>
         <input placeholder="Nome do cartão" value={f.name} onChange={(e) => set("name", e.target.value)} style={{ marginBottom: 9 }} autoFocus />
@@ -1310,6 +1523,9 @@ function SubForm({ modal, S, upd, allCats, onClose }) {
         <div className="fx-row">
           <input inputMode="numeric" placeholder="Dia fechamento" value={f.closeDay} onChange={(e) => set("closeDay", e.target.value)} />
           <input inputMode="numeric" placeholder="Dia vencimento" value={f.dueDay} onChange={(e) => set("dueDay", e.target.value)} />
+          <select value={f.cardType} onChange={(e) => set("cardType", e.target.value)}>
+            {Object.entries(CARD_TYPES).map(([key, value]) => <option key={key} value={key}>{value}</option>)}
+          </select>
         </div>
       </>)}
       {kind === "recurring" && (<>
@@ -1326,6 +1542,19 @@ function SubForm({ modal, S, upd, allCats, onClose }) {
           </select>
           <input inputMode="numeric" placeholder="Dia" value={f.day} onChange={(e) => set("day", e.target.value)} />
         </div>
+        <div className="fx-row">
+          <select value={f.recurrenceMode} onChange={(e) => set("recurrenceMode", e.target.value)}>
+            <option value="permanente">Permanente</option>
+            <option value="parcelado">Parcelado com total</option>
+          </select>
+          <input inputMode="decimal" placeholder="Valor total R$" value={f.totalAmount} onChange={(e) => set("totalAmount", e.target.value)} disabled={f.recurrenceMode !== "parcelado"} />
+        </div>
+        {f.recurrenceMode === "parcelado" && (
+          <div className="fx-row">
+            <input inputMode="numeric" placeholder="Nº parcelas" value={f.installments} onChange={(e) => set("installments", e.target.value)} />
+            <input inputMode="numeric" placeholder="Parcelas pagas" value={f.paidCount} onChange={(e) => set("paidCount", e.target.value)} />
+          </div>
+        )}
       </>)}
       <button className="fx-add" onClick={save}>Salvar</button>
     </Modal>
@@ -1458,6 +1687,10 @@ const CSS = `
 .fx-file-btn{position:relative;overflow:hidden}
 .fx-file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 
+.fx-toast{position:fixed;left:50%;bottom:74px;transform:translateX(-50%);z-index:80;max-width:492px;width:calc(100% - 28px);background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:11px 13px;font-size:13px;line-height:1.35;box-shadow:0 10px 28px rgba(0,0,0,.25)}
+.fx-toast.warn{border-color:rgba(255,122,92,.45)}
+.fx-toast.ok{border-color:rgba(200,246,93,.35)}
+
 .fx-war-hero{padding-bottom:14px}
 .fx-war-title{font-size:24px;font-weight:750;letter-spacing:0;margin-bottom:5px}
 .fx-war-sub{font-size:12.5px;color:var(--muted);line-height:1.45;max-width:360px}
@@ -1476,6 +1709,10 @@ const CSS = `
 .fx-attack-head p{margin:4px 0 0;color:var(--muted);font-size:12px;line-height:1.4}
 .fx-attack-meta{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:10px 0;font-size:11px;color:var(--muted)}
 .fx-attack-meta .fx-mono{font-size:13px}
+.fx-pay-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.fx-pay-actions .fx-mini-btn:first-child{background:rgba(200,246,93,.16);border-color:rgba(200,246,93,.32);color:#7CB93A}
+.fx-root2[data-theme="dark"] .fx-pay-actions .fx-mini-btn:first-child{color:var(--lime)}
+.fx-pay-suggestion{margin-top:11px}
 .fx-sim-summary{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 10px;color:var(--muted);font-size:12px}
 .fx-hold-note{margin-top:10px;background:rgba(245,196,81,.1);border:1px solid rgba(245,196,81,.22);color:#F5C451;border-radius:10px;padding:9px 10px;font-size:12.5px;line-height:1.4}
 .fx-plan-month{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px;margin-bottom:10px}
@@ -1492,6 +1729,8 @@ const CSS = `
 .fx-card-row b{display:block;font-size:13.5px}
 .fx-card-row span{display:block;color:var(--muted);font-size:11px;margin-top:2px}
 .fx-card-row strong{font-size:13px;white-space:nowrap}
+.fx-card-pay{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.fx-root2 input:disabled,.fx-root2 select:disabled{opacity:.45;cursor:not-allowed}
 
 .fx-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;
   background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr auto 1fr 1fr 1fr 1fr;
