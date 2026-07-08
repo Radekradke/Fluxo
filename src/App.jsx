@@ -696,45 +696,84 @@ export default function App() {
 
   if (!loaded) return <div className="fx-root2" data-theme="dark"><style>{CSS}</style><div className="fx-loading">Carregando…</div></div>;
 
+  const navItems = [
+    ["inicio", Home, "Início"],
+    ["extrato", List, "Extrato"],
+    ["planejar", Target, "Planejar"],
+    ["central", Landmark, "Central"],
+    ["contas", Wallet, "Contas"],
+    ["servicos", Briefcase, "Serviços"],
+  ];
+
   return (
     <div className="fx-root2" data-theme={S.theme}>
       <style>{CSS}</style>
 
-      {/* HEADER */}
-      <header className="fx-top">
-        <div className="fx-brand">
-          <span className="fx-logo">F</span>
-          <div>
-            <div className="fx-name">Fluxo</div>
-            <div className="fx-tag">painel financeiro pessoal</div>
+      <div className="fx-app-shell">
+        <aside className="fx-side">
+          <div className="fx-brand fx-side-brand">
+            <span className="fx-logo">F</span>
+            <div>
+              <div className="fx-name">Fluxo</div>
+              <div className="fx-tag">finance command</div>
+            </div>
           </div>
-        </div>
-        <div className="fx-head-actions">
-          <PWAInstallButton />
-          <button className="fx-icon-btn" onClick={() => upd({ theme: S.theme === "dark" ? "light" : "dark" })} title="Alternar tema">
-            {S.theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
-          </button>
-        </div>
-      </header>
+          <div className="fx-side-label">Menu</div>
+          <div className="fx-side-nav">
+            {navItems.map(([key, Icon, label]) => (
+              <button key={key} className={tab === key ? "on" : ""} onClick={() => setTab(key)}>
+                <Icon size={16} />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="fx-side-user">
+            <span className="fx-avatar">A</span>
+            <div>
+              <b>André</b>
+              <span>caixa pessoal</span>
+            </div>
+          </div>
+        </aside>
 
-      {/* NAV MÊS (compartilhada) */}
-      <div className="fx-month-nav">
-        <button onClick={() => setCursor(shiftMonth(cursor, -1))}><ChevronLeft size={17} /></button>
-        <span>{monthLabel(cursor)}</span>
-        <button onClick={() => setCursor(shiftMonth(cursor, 1))}><ChevronRight size={17} /></button>
+        <section className="fx-workspace">
+          {/* HEADER */}
+          <header className="fx-top">
+            <div className="fx-brand fx-top-brand">
+              <span className="fx-logo">F</span>
+              <div>
+                <div className="fx-name">Fluxo</div>
+                <div className="fx-tag">painel financeiro pessoal</div>
+              </div>
+            </div>
+            <div className="fx-head-actions">
+              <PWAInstallButton />
+              <button className="fx-icon-btn" onClick={() => upd({ theme: S.theme === "dark" ? "light" : "dark" })} title="Alternar tema">
+                {S.theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+              </button>
+            </div>
+          </header>
+
+          {/* NAV MÊS (compartilhada) */}
+          <div className="fx-month-nav">
+            <button onClick={() => setCursor(shiftMonth(cursor, -1))}><ChevronLeft size={17} /></button>
+            <span>{monthLabel(cursor)}</span>
+            <button onClick={() => setCursor(shiftMonth(cursor, 1))}><ChevronRight size={17} /></button>
+          </div>
+
+          <main className={`fx-main fx-main-${tab}`}>
+            {tab === "inicio" && <Dashboard {...{ S, cursor, mIn, mOut, balance, runway, budgetUsedPct, insights, health, catMeta, monthTx, goTab: setTab }} />}
+            {tab === "extrato" && <Extrato {...{ monthTx, allCats, catMeta, onEdit: (t) => setTxModal(t), onDel: delTx, onToggle: toggleStatus, onNew: () => setTxModal({}) }} />}
+            {tab === "planejar" && <Planejar {...{ S, upd, monthTx, allCats, catMeta, setSubModal }} />}
+            {tab === "central" && <CentralFinanceira {...{ S, cursor, balance, onImportAndrePlan: importAndrePlan, onPayDebt: payDebt, onPayDebts: payDebts, onPayCard: payCard }} />}
+            {tab === "contas" && <>
+              <Contas {...{ S, upd, setSubModal, launchRecurring, catMeta, cursor, onPayDebt: payDebt, onPayCard: payCard }} />
+              <BackupCard onExport={exportBackup} onImport={importBackup} />
+            </>}
+            {tab === "servicos" && <Servicos />}
+          </main>
+        </section>
       </div>
-
-      <main className="fx-main">
-        {tab === "inicio" && <Dashboard {...{ S, cursor, mIn, mOut, balance, runway, budgetUsedPct, insights, health, catMeta, monthTx, goTab: setTab }} />}
-        {tab === "extrato" && <Extrato {...{ monthTx, allCats, catMeta, onEdit: (t) => setTxModal(t), onDel: delTx, onToggle: toggleStatus, onNew: () => setTxModal({}) }} />}
-        {tab === "planejar" && <Planejar {...{ S, upd, monthTx, allCats, catMeta, setSubModal }} />}
-        {tab === "central" && <CentralFinanceira {...{ S, cursor, balance, onImportAndrePlan: importAndrePlan, onPayDebt: payDebt, onPayDebts: payDebts, onPayCard: payCard }} />}
-        {tab === "contas" && <>
-          <Contas {...{ S, upd, setSubModal, launchRecurring, catMeta, cursor, onPayDebt: payDebt, onPayCard: payCard }} />
-          <BackupCard onExport={exportBackup} onImport={importBackup} />
-        </>}
-        {tab === "servicos" && <Servicos />}
-      </main>
 
       {notice && <div className={`fx-toast ${notice.tone}`}>{notice.text}</div>}
 
@@ -1564,20 +1603,20 @@ function SubForm({ modal, S, upd, allCats, onClose }) {
 /* ═══════════════════════════ STYLES ═══════════════════════════ */
 const CSS = `
 .fx-root2{
-  --lime:#F5C451; --coral:#FF7A5C;
+  --lime:#F5C451; --gold:#D9A441; --blue:#5D7CFA; --violet:#7B4DFF; --coral:#FF6D5A;
   font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-  min-height:100vh; max-width:520px; margin:0 auto; padding:16px 14px 86px;
+  min-height:100vh; width:100%; margin:0; padding:14px;
   box-sizing:border-box; transition:background .25s,color .25s;
 }
 .fx-root2[data-theme="dark"]{
-  --ink:#0E0F13; --panel:#16181F; --panel2:#1E212B; --line:#2A2E3A;
-  --text:#ECEEF2; --muted:#878E9C;
-  background:var(--ink); color:var(--text);
+  --outer:#BFD0FF; --ink:#0B0C0F; --panel:#171719; --panel2:#202124; --panel3:#27282D; --line:#303238;
+  --text:#F4F1E8; --muted:#92949D;
+  background:var(--outer); color:var(--text);
 }
 .fx-root2[data-theme="light"]{
-  --ink:#F4F5F8; --panel:#FFFFFF; --panel2:#EEF0F5; --line:#DDE1EA;
-  --text:#171A21; --muted:#6A7180;
-  background:var(--ink); color:var(--text);
+  --outer:#C8D7FF; --ink:#F7F4EA; --panel:#FFFDF7; --panel2:#F3EFE4; --panel3:#E8E1D0; --line:#DED4BD;
+  --text:#1C1A14; --muted:#746D5E;
+  background:var(--outer); color:var(--text);
 }
 .fx-root2 *{box-sizing:border-box}
 .fx-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
@@ -1585,23 +1624,26 @@ const CSS = `
 .fx-root2[data-theme="dark"] .pos{color:var(--lime)}
 .fx-loading{text-align:center;padding:60px 0;color:var(--muted)}
 
+.fx-app-shell{min-height:calc(100vh - 28px);max-width:1180px;margin:0 auto;background:var(--ink);border:1px solid rgba(255,255,255,.1);border-radius:18px;box-shadow:0 22px 60px rgba(10,20,60,.28);overflow:hidden;display:block}
+.fx-workspace{padding:16px 14px 86px;min-height:calc(100vh - 28px)}
+.fx-side{display:none}
 .fx-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .fx-head-actions{display:flex;align-items:center;gap:8px}
-.fx-install-btn{background:var(--lime);color:#0E0F13;border:none;border-radius:9px;padding:8px 10px;font-size:12px;font-weight:800;cursor:pointer}
+.fx-install-btn{background:var(--blue);color:#fff;border:none;border-radius:7px;padding:8px 10px;font-size:12px;font-weight:700;cursor:pointer}
 .fx-brand{display:flex;align-items:center;gap:11px}
-.fx-logo{width:36px;height:36px;border-radius:11px;background:var(--lime);color:#0E0F13;display:grid;place-items:center;font-weight:800;font-size:19px}
-.fx-name{font-weight:700;font-size:17px;letter-spacing:-.3px}
+.fx-logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--lime));color:#111;display:grid;place-items:center;font-weight:900;font-size:18px;box-shadow:0 0 20px rgba(245,196,81,.18)}
+.fx-name{font-weight:750;font-size:17px;letter-spacing:0}
 .fx-tag{font-size:11px;color:var(--muted)}
-.fx-icon-btn{background:none;border:1px solid var(--line);color:var(--muted);width:32px;height:32px;border-radius:9px;display:grid;place-items:center;cursor:pointer;flex:0 0 auto}
+.fx-icon-btn{background:var(--panel2);border:1px solid var(--line);color:var(--muted);width:32px;height:32px;border-radius:8px;display:grid;place-items:center;cursor:pointer;flex:0 0 auto}
 .fx-icon-btn:hover{color:var(--text);border-color:var(--muted)}
 .fx-icon-btn.dim{border:none;width:28px;height:28px}
 
-.fx-month-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px;font-weight:600;font-size:14px}
-.fx-month-nav button{background:var(--panel);border:1px solid var(--line);color:var(--text);width:30px;height:30px;border-radius:9px;display:grid;place-items:center;cursor:pointer}
+.fx-month-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;font-weight:650;font-size:14px}
+.fx-month-nav button{background:var(--panel2);border:1px solid var(--line);color:var(--text);width:32px;height:32px;border-radius:8px;display:grid;place-items:center;cursor:pointer}
 .fx-month-nav span{min-width:135px;text-align:center}
 
-.fx-hero{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
-.fx-root2[data-theme="dark"] .fx-hero{background:linear-gradient(160deg,#1a1d26,#121419)}
+.fx-hero{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015)),var(--panel);border:1px solid var(--line);border-radius:13px;padding:16px;margin-bottom:12px}
+.fx-root2[data-theme="dark"] .fx-hero{background:linear-gradient(160deg,#191A1E,#111214)}
 .fx-hero-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .fx-hero-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;margin-bottom:4px}
 .fx-balance{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:31px;font-weight:600;letter-spacing:-.8px;font-variant-numeric:tabular-nums;color:#D9A441}
@@ -1619,11 +1661,11 @@ const CSS = `
 .fx-runway-sub{color:var(--muted);font-size:11px}
 
 .fx-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.fx-tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 11px;display:flex;flex-direction:column;gap:4px}
+.fx-tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 11px;display:flex;flex-direction:column;gap:4px}
 .fx-tile span{font-size:11px;color:var(--muted)}
 .fx-tile b{font-family:ui-monospace,monospace;font-size:13.5px;font-variant-numeric:tabular-nums;font-weight:600}
 
-.fx-card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:14px;margin-bottom:12px;position:relative}
+.fx-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
 .fx-card-title{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
 .fx-clickable{cursor:pointer}
 .fx-between{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -1634,7 +1676,7 @@ const CSS = `
 .fx-bar div{height:100%;border-radius:99px;transition:width .35s}
 
 .fx-insights{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-.fx-insights li{display:flex;gap:9px;font-size:13px;line-height:1.4;background:var(--panel2);padding:9px 11px;border-radius:10px}
+.fx-insights li{display:flex;gap:9px;font-size:13px;line-height:1.4;background:var(--panel2);padding:9px 11px;border-radius:8px}
 
 .fx-mini-list{list-style:none;margin:0;padding:0}
 .fx-mini-list li{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
@@ -1656,13 +1698,13 @@ const CSS = `
 .fx-legend .lname{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fx-legend .lval{font-size:11.5px;color:var(--muted)}
 
-.fx-search{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:0 11px;margin-bottom:9px;color:var(--muted)}
+.fx-search{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:0 11px;margin-bottom:9px;color:var(--muted)}
 .fx-search input{background:none;border:none;color:var(--text);padding:11px 0;font-size:14px;flex:1;outline:none}
 .fx-search .fx-icon-btn{border:none;width:24px;height:24px}
 .fx-filters{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:7px;margin-bottom:12px}
 
 .fx-list{list-style:none;margin:0;padding:0}
-.fx-list li{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.fx-list li{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
 .fx-list li:last-child{border:none}
 .fx-status{background:none;border:none;cursor:pointer;padding:2px;display:grid;place-items:center;flex:0 0 auto}
 .cat-ico{flex:0 0 auto;font-size:15px}
@@ -1677,7 +1719,7 @@ const CSS = `
 .fx-budget-del{position:absolute;top:8px;right:-6px}
 .fx-goal-actions{display:flex;align-items:center;gap:6px;margin-top:8px}
 
-.fx-mini-btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.fx-mini-btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:7px;padding:6px 10px;font-size:12px;font-weight:650;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
 .fx-mini-btn:hover{border-color:var(--muted)}
 .fx-link{background:none;border:none;color:#D9A441;cursor:pointer;font-size:13px;text-decoration:underline}
 .fx-root2[data-theme="dark"] .fx-link{color:var(--lime)}
@@ -1742,23 +1784,51 @@ const CSS = `
 .fx-fab{width:48px;height:48px;border-radius:50%;background:var(--lime)!important;color:#0E0F13!important;display:grid!important;place-items:center;margin-top:-22px;box-shadow:0 4px 14px rgba(245,196,81,.35)}
 
 .fx-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:100;backdrop-filter:blur(2px)}
-.fx-modal{background:var(--panel);border:1px solid var(--line);border-radius:18px 18px 0 0;padding:16px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;animation:fx-up .22s ease}
+.fx-modal{background:var(--panel);border:1px solid var(--line);border-radius:16px 16px 0 0;padding:16px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;animation:fx-up .22s ease}
 @keyframes fx-up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){.fx-modal{animation:none}.fx-bar div{transition:none}}
 .fx-modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:15px}
 
-.fx-toggle{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--ink);border:1px solid var(--line);border-radius:11px;padding:4px;margin-bottom:11px}
-.fx-toggle button{background:none;border:none;color:var(--muted);padding:9px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+.fx-toggle{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:11px}
+.fx-toggle button{background:none;border:none;color:var(--muted);padding:9px;border-radius:7px;font-size:14px;font-weight:600;cursor:pointer}
 .fx-toggle button.on.entrada{background:rgba(245,196,81,.16);color:#D9A441}
 .fx-root2[data-theme="dark"] .fx-toggle button.on.entrada{color:var(--lime)}
 .fx-toggle button.on.saida{background:rgba(255,122,92,.15);color:var(--coral)}
 
 .fx-row{display:flex;gap:8px;margin-bottom:9px}
-.fx-root2 input,.fx-root2 select{background:var(--ink);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 11px;font-size:14px;font-family:inherit;outline:none;width:100%;min-width:0}
+.fx-root2 input,.fx-root2 select{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:10px 11px;font-size:14px;font-family:inherit;outline:none;width:100%;min-width:0}
 .fx-root2 input:focus,.fx-root2 select:focus{border-color:#D9A441}
 .fx-root2[data-theme="dark"] input:focus,.fx-root2[data-theme="dark"] select:focus{border-color:var(--lime)}
 .fx-amount{font-family:ui-monospace,monospace;font-size:16px!important;font-weight:600}
-.fx-add{width:100%;background:var(--lime);color:#0E0F13;border:none;border-radius:11px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
+.fx-add{width:100%;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:750;cursor:pointer;margin-top:4px}
 .fx-add:disabled{opacity:.4;cursor:not-allowed}
 @media (max-width:380px){.fx-chart{flex-direction:column}.fx-donut{margin:0 auto}.fx-filters{grid-template-columns:1fr 1fr}}
+@media (min-width:780px){
+  .fx-root2{padding:34px 18px}
+  .fx-app-shell{display:grid;grid-template-columns:170px minmax(0,1fr);min-height:calc(100vh - 68px)}
+  .fx-workspace{padding:18px 20px 22px;min-height:auto;overflow:auto}
+  .fx-side{display:flex;flex-direction:column;background:#111214;border-right:1px solid var(--line);padding:16px 12px;min-height:calc(100vh - 68px)}
+  .fx-side-brand{margin-bottom:30px}
+  .fx-side-label{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin:0 8px 8px}
+  .fx-side-nav{display:flex;flex-direction:column;gap:5px}
+  .fx-side-nav button{height:34px;border:none;background:transparent;color:var(--muted);display:flex;align-items:center;gap:9px;border-radius:8px;padding:0 10px;font-size:12px;font-weight:650;cursor:pointer;text-align:left}
+  .fx-side-nav button.on{background:linear-gradient(90deg,rgba(93,124,250,.28),rgba(93,124,250,.08));color:#fff;border:1px solid rgba(93,124,250,.35)}
+  .fx-side-nav button svg{color:currentColor}
+  .fx-side-user{margin-top:auto;display:flex;align-items:center;gap:9px;padding:9px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid var(--line)}
+  .fx-avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--blue),var(--violet));font-size:12px;font-weight:800;color:#fff}
+  .fx-side-user b{font-size:12px;display:block}
+  .fx-side-user span{font-size:10px;color:var(--muted)}
+  .fx-top-brand{display:none}
+  .fx-top{margin-bottom:10px}
+  .fx-month-nav{justify-content:flex-start}
+  .fx-main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.8fr);gap:12px;align-items:start}
+  .fx-main-extrato,.fx-main-central,.fx-main-contas,.fx-main-planejar,.fx-main-servicos{display:block}
+  .fx-hero,.fx-grid3,.fx-main-inicio > .fx-card:nth-of-type(1){grid-column:1 / -1}
+  .fx-grid3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .fx-card{margin-bottom:0}
+  .fx-main > *{margin-bottom:12px}
+  .fx-chart{min-height:150px}
+  .fx-filters{grid-template-columns:1fr 1.2fr 1fr}
+  .fx-nav{display:none}
+}
 `;

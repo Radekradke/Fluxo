@@ -1,4 +1,4 @@
-const CACHE_NAME = "fluxo-pwa-v1";
+const CACHE_NAME = "fluxo-pwa-v2";
 const PRECACHE_URLS = [
   "./",
   "./index.html",
@@ -31,6 +31,12 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  if (
+    url.pathname.startsWith("/src/") ||
+    url.pathname.startsWith("/@vite") ||
+    url.pathname.startsWith("/node_modules/.vite") ||
+    url.pathname.includes("@react-refresh")
+  ) return;
 
   if (request.mode === "navigate") {
     event.respondWith(

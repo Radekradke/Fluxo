@@ -1,8 +1,8 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App.jsx";
+import App from "./App.jsx?v=ui-shell-v2";
 import "./global.css";
-import { registerServiceWorker } from "./pwa.js";
+import { registerServiceWorker } from "./pwa.js?v=ui-shell-v2";
 
 // Compatibilidade com códigos exportados de ambientes que usam window.storage.
 // No app real, salvamos tudo no localStorage do navegador.
