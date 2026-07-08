@@ -698,6 +698,9 @@ function CentralFinanceira({ S, upd, cursor, onImportAndrePlan }) {
   const [incoming, setIncoming] = useState("6133");
   const [reserve, setReserve] = useState("300");
 
+  const currentBalance = S.tx
+    .filter((tx) => tx.status !== "pendente")
+    .reduce((sum, tx) => sum + (tx.type === "receita" ? tx.amount : -tx.amount), 0);
   const pendingValue = (debt) => Math.max(0, (debt.total || 0) - (debt.paid || 0));
   const pendingDebts = S.debts.filter((debt) => pendingValue(debt) > 0);
   const attackDebts = pendingDebts
@@ -708,7 +711,7 @@ function CentralFinanceira({ S, upd, cursor, onImportAndrePlan }) {
     .filter((tx) => tx.type === "receita" && mKey(tx.date) === cursor)
     .reduce((sum, tx) => sum + tx.amount, 0);
   const payoffTotal = attackDebts.reduce((sum, debt) => sum + pendingValue(debt), 0);
-  const projectedBalance = monthIncome - payoffTotal;
+  const projectedBalance = currentBalance - payoffTotal;
   const activeCreditors = new Set(pendingDebts.map((debt) => debt.creditor || debt.name)).size;
 
   const cashNow = parseNum(incoming);
@@ -724,12 +727,82 @@ function CentralFinanceira({ S, upd, cursor, onImportAndrePlan }) {
     return acc;
   }, { available: cashNow, pay: [], hold: [] });
 
-  const markDebtPaid = (debt) => {
+  const isCardDebt = (card, debt) => {
+    const cardName = normText(card.name);
+    return normText(debt.creditor).includes(cardName) || normText(debt.name).includes(cardName);
+  };
+
+  const payDebt = (debt, amount = pendingValue(debt)) => {
+    const value = Math.min(amount, pendingValue(debt));
+    if (value <= 0) return;
+
+    const txNote = `central:pagamento:${debt.id}:${cents(value)}`;
+    const alreadyPosted = S.tx.some((tx) => tx.notes === txNote);
+    const paymentTx = {
+      id: uid() + Math.random(),
+      title: `Pagamento ${debt.creditor || debt.name}`,
+      amount: value,
+      type: "despesa",
+      category: "Dívidas",
+      date: todayISO(),
+      status: "efetivado",
+      payment: "Pix",
+      notes: txNote,
+    };
+
     upd({
+      tx: alreadyPosted ? S.tx : [...S.tx, paymentTx],
       debts: S.debts.map((item) => item.id === debt.id
-        ? { ...item, paid: item.total, paidInst: item.installments || item.paidInst || 1 }
+        ? {
+            ...item,
+            paid: Math.min(item.total, (item.paid || 0) + value),
+            paidInst: value >= pendingValue(item) ? (item.installments || item.paidInst || 1) : item.paidInst,
+          }
         : item
       ),
+      cards: S.cards.map((card) => isCardDebt(card, debt)
+        ? { ...card, used: Math.max(0, (card.used || 0) - value) }
+        : card
+      ),
+    });
+  };
+
+  const paySuggestion = () => {
+    if (sim.pay.length === 0) return;
+
+    const payments = sim.pay.map((debt) => ({ debt, value: pendingValue(debt) })).filter((item) => item.value > 0);
+    const txNotes = new Set(S.tx.map((tx) => tx.notes));
+    const newTx = payments
+      .filter(({ debt, value }) => !txNotes.has(`central:pagamento:${debt.id}:${cents(value)}`))
+      .map(({ debt, value }) => ({
+        id: uid() + Math.random(),
+        title: `Pagamento ${debt.creditor || debt.name}`,
+        amount: value,
+        type: "despesa",
+        category: "Dívidas",
+        date: todayISO(),
+        status: "efetivado",
+        payment: "Pix",
+        notes: `central:pagamento:${debt.id}:${cents(value)}`,
+      }));
+
+    upd({
+      tx: [...S.tx, ...newTx],
+      debts: S.debts.map((debt) => {
+        const payment = payments.find((item) => item.debt.id === debt.id);
+        if (!payment) return debt;
+        return {
+          ...debt,
+          paid: Math.min(debt.total, (debt.paid || 0) + payment.value),
+          paidInst: payment.value >= pendingValue(debt) ? (debt.installments || debt.paidInst || 1) : debt.paidInst,
+        };
+      }),
+      cards: S.cards.map((card) => {
+        const paidOnCard = payments
+          .filter(({ debt }) => isCardDebt(card, debt))
+          .reduce((sum, item) => sum + item.value, 0);
+        return paidOnCard > 0 ? { ...card, used: Math.max(0, (card.used || 0) - paidOnCard) } : card;
+      }),
     });
   };
 
@@ -769,10 +842,10 @@ function CentralFinanceira({ S, upd, cursor, onImportAndrePlan }) {
         <div className="fx-card-title">Resumo da guerra</div>
         <div className="fx-war-grid">
           <div className="fx-war-tile"><span>Entradas previstas</span><b className="pos">{BRL(monthIncome)}</b></div>
-          <div className="fx-war-tile"><span>Dívidas pendentes</span><b>{pendingDebts.length}</b></div>
+          <div className="fx-war-tile"><span>Saldo em caixa</span><b className={currentBalance < 0 ? "neg" : "pos"}>{BRL(currentBalance)}</b></div>
           <div className="fx-war-tile"><span>Total para quitar</span><b className="neg">{BRL(payoffTotal)}</b></div>
-          <div className="fx-war-tile"><span>Saldo projetado</span><b className={projectedBalance < 0 ? "neg" : "pos"}>{BRL(projectedBalance)}</b></div>
-          <div className="fx-war-tile wide"><span>Credores ativos</span><b>{activeCreditors}</b></div>
+          <div className="fx-war-tile"><span>Saldo após quitar</span><b className={projectedBalance < 0 ? "neg" : "pos"}>{BRL(projectedBalance)}</b></div>
+          <div className="fx-war-tile wide"><span>Dívidas pendentes · credores ativos</span><b>{pendingDebts.length} · {activeCreditors}</b></div>
         </div>
       </section>
 
@@ -796,7 +869,7 @@ function CentralFinanceira({ S, upd, cursor, onImportAndrePlan }) {
                     {debt.original && <span>original {BRL(debt.original)}</span>}
                     {debt.originalDue && <span>venc. original {fmtDia(debt.originalDue)}/{debt.originalDue.slice(2, 4)}</span>}
                   </div>
-                  <button className="fx-mini-btn" onClick={() => markDebtPaid(debt)}><Check size={12} /> marcar como pago</button>
+                  <button className="fx-mini-btn" onClick={() => payDebt(debt)}><Check size={12} /> pagar e baixar saldo</button>
                 </article>
               );
             })}
@@ -815,15 +888,18 @@ function CentralFinanceira({ S, upd, cursor, onImportAndrePlan }) {
           <span>Sobra após sugestão: <b className="fx-mono">{BRL(sim.available)}</b></span>
         </div>
         {sim.pay.length === 0 ? <Empty text="Informe um valor maior para liberar pagamentos sem furar a reserva." /> : (
-          <ul className="fx-mini-list">
-            {sim.pay.map((debt) => (
-              <li key={debt.id}>
-                <span className="ico"><CheckCircle2 size={16} color="var(--lime)" /></span>
-                <span className="nm">{debt.name}</span>
-                <b className="fx-mono">{BRL(pendingValue(debt))}</b>
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="fx-mini-list">
+              {sim.pay.map((debt) => (
+                <li key={debt.id}>
+                  <span className="ico"><CheckCircle2 size={16} color="var(--lime)" /></span>
+                  <span className="nm">{debt.name}</span>
+                  <b className="fx-mono">{BRL(pendingValue(debt))}</b>
+                </li>
+              ))}
+            </ul>
+            <button className="fx-add fx-pay-suggestion" onClick={paySuggestion}>Pagar sugestão e atualizar saldo</button>
+          </>
         )}
         {sim.hold.length > 0 && (
           <div className="fx-hold-note">
