@@ -43,7 +43,7 @@ const DEFAULT_CATS = {
     { name: "Outros", icon: "📦", color: "#9CA3AF" },
   ],
   receita: [
-    { name: "Tattoo", icon: "🖋️", color: "#C8F65D" },
+    { name: "Tattoo", icon: "🖋️", color: "#F5C451" },
     { name: "Freelance", icon: "💻", color: "#6EE7B7" },
     { name: "Salário", icon: "💼", color: "#67C7FF" },
     { name: "Outros", icon: "💰", color: "#F5C451" },
@@ -278,7 +278,7 @@ function healthScore(S, cursor) {
   if (S.goals.length) score += (S.goals.reduce((s, g) => s + Math.min(1, g.current / g.target), 0) / S.goals.length) * 20;
   else score += 8;
   score = Math.round(Math.min(100, score));
-  const label = score >= 75 ? ["Excelente", "#C8F65D"] : score >= 55 ? ["Boa", "#6EE7B7"] : score >= 35 ? ["Atenção", "#F5C451"] : ["Crítica", "#FF7A5C"];
+  const label = score >= 75 ? ["Excelente", "#F5C451"] : score >= 55 ? ["Boa", "#D9A441"] : score >= 35 ? ["Atenção", "#F5C451"] : ["Crítica", "#FF7A5C"];
   return { score, label: label[0], color: label[1] };
 }
 
@@ -893,7 +893,7 @@ function Dashboard({ S, cursor, mIn, mOut, balance, runway, budgetUsedPct, insig
               <XAxis dataKey="m" tick={{ fill: "var(--muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis hide />
               <Tooltip formatter={(v) => BRL(v)} contentStyle={{ background: "var(--panel2)", border: "1px solid var(--line)", borderRadius: 10, fontSize: 12 }} labelStyle={{ color: "var(--muted)" }} />
-              <ReBar dataKey="receitas" fill="#C8F65D" radius={[4, 4, 0, 0]} />
+              <ReBar dataKey="receitas" fill="#F5C451" radius={[4, 4, 0, 0]} />
               <ReBar dataKey="despesas" fill="#FF7A5C" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -1238,7 +1238,7 @@ function Planejar({ S, upd, monthTx, allCats, catMeta, setSubModal }) {
                 <span>🎯 {g.name}</span>
                 <span className="fx-mono">{BRL(g.current)} / {BRL(g.target)}</span>
               </div>
-              <Bar pct={pct} color={pct >= 100 ? "var(--lime)" : "#6EE7B7"} />
+              <Bar pct={pct} color={pct >= 100 ? "var(--lime)" : "#D9A441"} />
               <div className="fx-between fx-xs">
                 <span className="fx-muted-sm">{Math.round(pct)}%{g.deadline ? ` · até ${fmtDia(g.deadline)}/${g.deadline.slice(2, 4)}` : ""}</span>
                 <span className="fx-muted-sm">{falta === 0 ? "concluída 🏆" : meses ? `guarde ${BRL(falta / meses)}/mês` : `faltam ${BRL(falta)}`}</span>
@@ -1564,7 +1564,7 @@ function SubForm({ modal, S, upd, allCats, onClose }) {
 /* ═══════════════════════════ STYLES ═══════════════════════════ */
 const CSS = `
 .fx-root2{
-  --lime:#C8F65D; --coral:#FF7A5C;
+  --lime:#F5C451; --coral:#FF7A5C;
   font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
   min-height:100vh; max-width:520px; margin:0 auto; padding:16px 14px 86px;
   box-sizing:border-box; transition:background .25s,color .25s;
@@ -1581,7 +1581,7 @@ const CSS = `
 }
 .fx-root2 *{box-sizing:border-box}
 .fx-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
-.pos{color:#7CB93A} .neg{color:var(--coral)}
+.pos{color:#D9A441} .neg{color:var(--coral)}
 .fx-root2[data-theme="dark"] .pos{color:var(--lime)}
 .fx-loading{text-align:center;padding:60px 0;color:var(--muted)}
 
@@ -1604,16 +1604,16 @@ const CSS = `
 .fx-root2[data-theme="dark"] .fx-hero{background:linear-gradient(160deg,#1a1d26,#121419)}
 .fx-hero-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .fx-hero-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;margin-bottom:4px}
-.fx-balance{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:31px;font-weight:600;letter-spacing:-.8px;font-variant-numeric:tabular-nums;color:#7CB93A}
+.fx-balance{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:31px;font-weight:600;letter-spacing:-.8px;font-variant-numeric:tabular-nums;color:#D9A441}
 .fx-root2[data-theme="dark"] .fx-balance{color:var(--lime)}
 .fx-balance.neg{color:var(--coral)!important}
 .fx-health{position:relative;flex:0 0 52px}
 .fx-health-txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
 .fx-health-txt b{font-size:14px;font-family:ui-monospace,monospace}
 .fx-health-txt span{font-size:7px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-.fx-runway{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:11px;font-size:12.5px;background:rgba(200,246,93,.09);border:1px solid rgba(200,246,93,.22);padding:7px 11px;border-radius:10px;width:fit-content}
-.fx-root2[data-theme="light"] .fx-runway{background:rgba(124,185,58,.1);border-color:rgba(124,185,58,.3)}
-.fx-runway svg{color:#7CB93A}
+.fx-runway{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:11px;font-size:12.5px;background:rgba(245,196,81,.09);border:1px solid rgba(245,196,81,.22);padding:7px 11px;border-radius:10px;width:fit-content}
+.fx-root2[data-theme="light"] .fx-runway{background:rgba(245,196,81,.1);border-color:rgba(245,196,81,.3)}
+.fx-runway svg{color:#D9A441}
 .fx-root2[data-theme="dark"] .fx-runway svg{color:var(--lime)}
 .fx-runway b{font-family:ui-monospace,monospace}
 .fx-runway-sub{color:var(--muted);font-size:11px}
@@ -1642,7 +1642,7 @@ const CSS = `
 .fx-mini-list .ico{flex:0 0 auto}
 .fx-mini-list .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fx-mini-list .dt{font-size:11px;color:var(--muted)}
-.fx-launched{display:flex;align-items:center;gap:3px;font-size:11px;color:#7CB93A}
+.fx-launched{display:flex;align-items:center;gap:3px;font-size:11px;color:#D9A441}
 .fx-root2[data-theme="dark"] .fx-launched{color:var(--lime)}
 
 .fx-chart{display:flex;gap:14px;align-items:center}
@@ -1679,7 +1679,7 @@ const CSS = `
 
 .fx-mini-btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
 .fx-mini-btn:hover{border-color:var(--muted)}
-.fx-link{background:none;border:none;color:#7CB93A;cursor:pointer;font-size:13px;text-decoration:underline}
+.fx-link{background:none;border:none;color:#D9A441;cursor:pointer;font-size:13px;text-decoration:underline}
 .fx-root2[data-theme="dark"] .fx-link{color:var(--lime)}
 .fx-empty2{text-align:center;padding:12px 0;color:var(--muted);font-size:13px}
 .fx-backup-text{font-size:13px;line-height:1.45;color:var(--muted);margin:0 0 11px}
@@ -1689,7 +1689,7 @@ const CSS = `
 
 .fx-toast{position:fixed;left:50%;bottom:74px;transform:translateX(-50%);z-index:80;max-width:492px;width:calc(100% - 28px);background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:11px 13px;font-size:13px;line-height:1.35;box-shadow:0 10px 28px rgba(0,0,0,.25)}
 .fx-toast.warn{border-color:rgba(255,122,92,.45)}
-.fx-toast.ok{border-color:rgba(200,246,93,.35)}
+.fx-toast.ok{border-color:rgba(245,196,81,.35)}
 
 .fx-war-hero{padding-bottom:14px}
 .fx-war-title{font-size:24px;font-weight:750;letter-spacing:0;margin-bottom:5px}
@@ -1703,14 +1703,14 @@ const CSS = `
 .fx-attack-list{display:flex;flex-direction:column;gap:10px}
 .fx-attack-item{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px}
 .fx-attack-head{display:flex;gap:10px;align-items:flex-start}
-.fx-priority{width:30px;height:30px;border-radius:9px;background:rgba(200,246,93,.14);border:1px solid rgba(200,246,93,.25);color:#7CB93A;display:grid;place-items:center;font-size:12px;font-weight:800;flex:0 0 auto}
+.fx-priority{width:30px;height:30px;border-radius:9px;background:rgba(245,196,81,.14);border:1px solid rgba(245,196,81,.25);color:#D9A441;display:grid;place-items:center;font-size:12px;font-weight:800;flex:0 0 auto}
 .fx-root2[data-theme="dark"] .fx-priority{color:var(--lime)}
 .fx-attack-head b{font-size:14px;display:block;line-height:1.25}
 .fx-attack-head p{margin:4px 0 0;color:var(--muted);font-size:12px;line-height:1.4}
 .fx-attack-meta{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:10px 0;font-size:11px;color:var(--muted)}
 .fx-attack-meta .fx-mono{font-size:13px}
 .fx-pay-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
-.fx-pay-actions .fx-mini-btn:first-child{background:rgba(200,246,93,.16);border-color:rgba(200,246,93,.32);color:#7CB93A}
+.fx-pay-actions .fx-mini-btn:first-child{background:rgba(245,196,81,.16);border-color:rgba(245,196,81,.32);color:#D9A441}
 .fx-root2[data-theme="dark"] .fx-pay-actions .fx-mini-btn:first-child{color:var(--lime)}
 .fx-pay-suggestion{margin-top:11px}
 .fx-sim-summary{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 10px;color:var(--muted);font-size:12px}
@@ -1722,7 +1722,7 @@ const CSS = `
 .fx-plan-row:last-child{border-bottom:none;padding-bottom:0}
 .fx-plan-row span{min-width:0}
 .fx-plan-row em{font-style:normal;font-size:10.5px;color:#F5C451;border:1px solid rgba(245,196,81,.25);background:rgba(245,196,81,.09);border-radius:99px;padding:3px 7px;white-space:nowrap}
-.fx-plan-row em.ok{color:#7CB93A;border-color:rgba(124,185,58,.3);background:rgba(124,185,58,.1)}
+.fx-plan-row em.ok{color:#D9A441;border-color:rgba(245,196,81,.3);background:rgba(245,196,81,.1)}
 .fx-root2[data-theme="dark"] .fx-plan-row em.ok{color:var(--lime)}
 .fx-card-stack{display:flex;flex-direction:column;gap:8px}
 .fx-card-row{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 11px}
@@ -1737,9 +1737,9 @@ const CSS = `
   align-items:center;padding:7px 10px calc(7px + env(safe-area-inset-bottom));gap:4px;z-index:50}
 .fx-nav button{background:none;border:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9px;cursor:pointer;padding:4px 1px;min-width:0}
 .fx-nav span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
-.fx-nav button.on{color:#7CB93A}
+.fx-nav button.on{color:#D9A441}
 .fx-root2[data-theme="dark"] .fx-nav button.on{color:var(--lime)}
-.fx-fab{width:48px;height:48px;border-radius:50%;background:var(--lime)!important;color:#0E0F13!important;display:grid!important;place-items:center;margin-top:-22px;box-shadow:0 4px 14px rgba(200,246,93,.35)}
+.fx-fab{width:48px;height:48px;border-radius:50%;background:var(--lime)!important;color:#0E0F13!important;display:grid!important;place-items:center;margin-top:-22px;box-shadow:0 4px 14px rgba(245,196,81,.35)}
 
 .fx-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:100;backdrop-filter:blur(2px)}
 .fx-modal{background:var(--panel);border:1px solid var(--line);border-radius:18px 18px 0 0;padding:16px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;animation:fx-up .22s ease}
@@ -1749,13 +1749,13 @@ const CSS = `
 
 .fx-toggle{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--ink);border:1px solid var(--line);border-radius:11px;padding:4px;margin-bottom:11px}
 .fx-toggle button{background:none;border:none;color:var(--muted);padding:9px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
-.fx-toggle button.on.entrada{background:rgba(200,246,93,.16);color:#7CB93A}
+.fx-toggle button.on.entrada{background:rgba(245,196,81,.16);color:#D9A441}
 .fx-root2[data-theme="dark"] .fx-toggle button.on.entrada{color:var(--lime)}
 .fx-toggle button.on.saida{background:rgba(255,122,92,.15);color:var(--coral)}
 
 .fx-row{display:flex;gap:8px;margin-bottom:9px}
 .fx-root2 input,.fx-root2 select{background:var(--ink);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 11px;font-size:14px;font-family:inherit;outline:none;width:100%;min-width:0}
-.fx-root2 input:focus,.fx-root2 select:focus{border-color:#7CB93A}
+.fx-root2 input:focus,.fx-root2 select:focus{border-color:#D9A441}
 .fx-root2[data-theme="dark"] input:focus,.fx-root2[data-theme="dark"] select:focus{border-color:var(--lime)}
 .fx-amount{font-family:ui-monospace,monospace;font-size:16px!important;font-weight:600}
 .fx-add{width:100%;background:var(--lime);color:#0E0F13;border:none;border-radius:11px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}

@@ -14,7 +14,7 @@ const fmtDia = (iso) => (iso ? `${iso.slice(8)}/${iso.slice(5, 7)}` : "—");
 const STATUS = {
   orcamento: { label: "Orçamento", color: "#94A3B8" },
   andamento: { label: "Em andamento", color: "#67C7FF" },
-  concluido: { label: "Concluído", color: "#C8F65D" },
+  concluido: { label: "Concluído", color: "#F5C451" },
   cancelado: { label: "Cancelado", color: "#FF7A5C" },
 };
 
@@ -171,7 +171,7 @@ useEffect(() => {
                   {j.payments.map((p) => (
                     <li key={p.id}>
                       <button className="sv-recv" onClick={() => patchPay(j.id, p.id, { received: !p.received, date: !p.received && !p.date ? todayISO() : p.date })} title={p.received ? "Recebido" : "A receber"}>
-                        {p.received ? <Check size={15} color="#C8F65D" /> : <Clock size={15} color="#F5C451" />}
+                        {p.received ? <Check size={15} color="#F5C451" /> : <Clock size={15} color="#F5C451" />}
                       </button>
                       <div className="sv-pay-main">
                         <span className="sv-pay-label">{p.label} <em>{total ? Math.round((p.amount / total) * 100) : 0}%</em></span>
@@ -284,7 +284,7 @@ function JobForm({ job, onSave, onClose }) {
 }
 
 const CSS = `
-.sv-root{--lime:#C8F65D;--coral:#FF7A5C;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+.sv-root{--lime:#F5C451;--coral:#FF7A5C;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
   min-height:100vh;max-width:520px;margin:0 auto;padding:16px 14px 40px;box-sizing:border-box;transition:background .25s,color .25s}
 .sv-root[data-theme="dark"]{--ink:#0E0F13;--panel:#16181F;--panel2:#1E212B;--line:#2A2E3A;--text:#ECEEF2;--muted:#878E9C;background:var(--ink);color:var(--text)}
 .sv-root[data-theme="light"]{--ink:#F4F5F8;--panel:#fff;--panel2:#EEF0F5;--line:#DDE1EA;--text:#171A21;--muted:#6A7180;background:var(--ink);color:var(--text)}
@@ -304,7 +304,7 @@ const CSS = `
 .sv-root[data-theme="dark"] .sv-hero{background:linear-gradient(160deg,#1a1d26,#121419)}
 .sv-hero-label{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:5px}
 .sv-hero-label svg{color:var(--lime)}
-.sv-big{font-family:ui-monospace,Menlo,monospace;font-size:30px;font-weight:600;letter-spacing:-.8px;font-variant-numeric:tabular-nums;color:#7CB93A}
+.sv-big{font-family:ui-monospace,Menlo,monospace;font-size:30px;font-weight:600;letter-spacing:-.8px;font-variant-numeric:tabular-nums;color:#D9A441}
 .sv-root[data-theme="dark"] .sv-big{color:var(--lime)}
 .sv-hero-sub{font-size:11.5px;color:var(--muted);margin-top:6px}
 
@@ -321,7 +321,7 @@ const CSS = `
 .sv-chips button.on{background:var(--lime);color:#0E0F13;border-color:var(--lime);font-weight:600}
 
 .sv-empty{text-align:center;color:var(--muted);font-size:14px;padding:28px 0}
-.sv-link{background:none;border:none;color:#7CB93A;cursor:pointer;text-decoration:underline;font-size:14px}
+.sv-link{background:none;border:none;color:#D9A441;cursor:pointer;text-decoration:underline;font-size:14px}
 .sv-root[data-theme="dark"] .sv-link{color:var(--lime)}
 
 .sv-job{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:14px;margin-bottom:11px}
@@ -336,7 +336,7 @@ const CSS = `
 .sv-bar{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:11px 0 6px}
 .sv-bar div{height:100%;background:var(--lime);border-radius:99px;transition:width .35s}
 .sv-job-meta{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
-.sv-count-tag{display:flex;align-items:center;gap:4px;color:#7CB93A}
+.sv-count-tag{display:flex;align-items:center;gap:4px;color:#D9A441}
 .sv-root[data-theme="dark"] .sv-count-tag{color:var(--lime)}
 
 .sv-pays{list-style:none;margin:12px 0 0;padding:0}
@@ -352,7 +352,7 @@ const CSS = `
 .sv-switch input{opacity:0;width:0;height:0}
 .sv-slider{position:absolute;inset:0;background:var(--panel2);border:1px solid var(--line);border-radius:99px;transition:.2s;display:flex;align-items:center;padding-left:4px;color:var(--muted)}
 .sv-slider svg{opacity:0;transition:.2s}
-.sv-switch input:checked+.sv-slider{background:rgba(200,246,93,.2);border-color:var(--lime);color:#7CB93A;justify-content:flex-start;padding-left:5px}
+.sv-switch input:checked+.sv-slider{background:rgba(245,196,81,.2);border-color:var(--lime);color:#D9A441;justify-content:flex-start;padding-left:5px}
 .sv-switch input:checked+.sv-slider svg{opacity:1}
 .sv-slider::after{content:"";position:absolute;right:3px;top:2px;width:17px;height:17px;border-radius:50%;background:var(--muted);transition:.2s}
 .sv-switch input:checked+.sv-slider::after{background:var(--lime);right:auto;left:22px}
@@ -376,15 +376,15 @@ const CSS = `
 .sv-mini-label .warn{color:#F5C451;text-transform:none;letter-spacing:0}
 .sv-splits{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:6px}
 .sv-splits button{background:var(--ink);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px;font-size:12px;cursor:pointer;text-align:left}
-.sv-splits button.on{border-color:var(--lime);background:rgba(200,246,93,.1)}
+.sv-splits button.on{border-color:var(--lime);background:rgba(245,196,81,.1)}
 
 .sv-pay-editor{margin-top:4px}
 .sv-pay-row{display:flex;gap:5px;align-items:center;margin-bottom:6px}
 .sv-pay-row .pl{flex:1.3}.sv-pay-row .pv{flex:1;font-family:ui-monospace,monospace}.sv-pay-row .pd{flex:1.1;font-size:12px;padding:9px 6px}
 .sv-pay-row input{padding:9px}
 .sv-pay-row .tg{width:32px;height:36px;flex:0 0 auto;border:1px solid var(--line);background:var(--ink);color:var(--muted);border-radius:9px;display:grid;place-items:center;cursor:pointer}
-.sv-pay-row .tg.on{border-color:var(--lime);color:#7CB93A;background:rgba(200,246,93,.12)}
-.sv-pay-row .tg.onc{border-color:var(--lime);color:#7CB93A;background:rgba(200,246,93,.12)}
+.sv-pay-row .tg.on{border-color:var(--lime);color:#D9A441;background:rgba(245,196,81,.12)}
+.sv-pay-row .tg.onc{border-color:var(--lime);color:#D9A441;background:rgba(245,196,81,.12)}
 .sv-pay-row .tg.del:hover{color:var(--coral);border-color:var(--coral)}
 .sv-add-row{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:7px 11px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;margin-top:2px}
 `;
